@@ -527,3 +527,13 @@ details.othersets[open] summary::after { content: '▴'; }
   opacity: 0; animation: ttGlow .9s ease-out .4s both; }
 @keyframes ttGlow { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: 1; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.15); } }
 @media (prefers-reduced-motion: reduce) { .tt-glow { display: none; } }
+
+/* キャラ画像の切り替え：前の画像をフェードアウト */
+.char .bust { position: relative; }
+.cimg-old { position: absolute; pointer-events: none; animation: cimgOut .3s ease-out forwards; display: block; max-width: none; }
+@keyframes cimgOut { from { opacity: 1; } to { opacity: 0; } }
+/* トップ画面：キャラが出たあとは、ゆっくり呼吸するように動く */
+.tt-chars, .tt-robots { transform-origin: 50% 62%; animation: ttBreath 4.2s ease-in-out infinite; }
+.fresh .tt-chars, .fresh .tt-robots { animation: ttPop 1.05s cubic-bezier(.2, 1.5, .4, 1) .35s both, ttBreath 4.2s ease-in-out 1.4s infinite; }
+@keyframes ttBreath { 0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.012) translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .tt-chars, .tt-robots { animation: none !important; } .cimg-old { display: none; } }

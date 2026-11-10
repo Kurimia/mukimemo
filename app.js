@@ -79,7 +79,34 @@ function render() {
     }
   }
 }
+// キャラの画像が変わるとき、前の画像を少しだけ残してフェードで消す（パッと消えてチカチカしないように）
+function charKey(img) {
+  const c = img.closest('.char');
+  return c ? (c.dataset.who || '') + (c.classList.contains('duo') ? '-duo' : '') : null;
+}
+function snapChars() {
+  const m = {};
+  document.querySelectorAll('.char img.cimg').forEach((img) => { const k = charKey(img); if (k) m[k] = img.getAttribute('src'); });
+  return m;
+}
+function crossfadeChars(old) {
+  document.querySelectorAll('.char img.cimg').forEach((img) => {
+    const k = charKey(img);
+    const prev = k && old[k];
+    if (!prev || prev === img.getAttribute('src')) return;
+    const g = document.createElement('img');
+    g.src = prev; g.alt = ''; g.className = 'cimg-old';
+    Object.assign(g.style, { left: img.offsetLeft + 'px', top: img.offsetTop + 'px', width: img.offsetWidth + 'px', height: img.offsetHeight + 'px', objectFit: getComputedStyle(img).objectFit, objectPosition: getComputedStyle(img).objectPosition });
+    img.parentNode.insertBefore(g, img.nextSibling);
+    setTimeout(() => g.remove(), 320);
+  });
+}
 function renderInner() {
+  const oldChars = snapChars();
+  renderBody();
+  crossfadeChars(oldChars);
+}
+function renderBody() {
   applyCharMode();
   const view = `${U.page || ''}|${U.tab}|${U.clear ? 'clear' + U.clear.idx : ''}|${U.chal ? 'chal' : ''}|${U.fx && !U.fx.small ? 'fx' : ''}|${S.active ? S.active.idx : ''}`;
   if (view !== _lastView) { _lastView = view; newScene(); }
