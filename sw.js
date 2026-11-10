@@ -1,5 +1,5 @@
 /* オフラインでも開けるようにするキャッシュ。ファイルを更新したら VERSION を上げる */
-const VERSION = 'v53';
+const VERSION = 'v54';
 const FILES = [
   './', 'index.html', 'styles.css', 'data.js', 'icons.js', 'lines.js', 'lines-robot.js', 'store.js', 'app.js', 'manifest.webmanifest',
   'assets/char/v2/meal1-confused.webp', 'assets/char/v2/meal1-grin.webp', 'assets/char/v2/meal1-kyun.webp', 'assets/char/v2/meal1-kyunkyun.webp', 'assets/char/v2/meal1-laugh.webp', 'assets/char/v2/meal1-normal.webp', 'assets/char/v2/meal1-normal2.webp', 'assets/char/v2/meal1-smile.webp', 'assets/char/v2/meal1-surprise.webp', 'assets/char/v2/meal2-kyunkyun.webp', 'assets/char/v2/meal2-normal.webp', 'assets/char/v2/meal2-smile.webp', 'assets/char/v2/meal2-surprise.webp', 'assets/char/v2/trainer1-grin.webp', 'assets/char/v2/trainer1-grin2.webp', 'assets/char/v2/trainer1-kyun.webp', 'assets/char/v2/trainer1-kyunkyun.webp', 'assets/char/v2/trainer1-laugh.webp', 'assets/char/v2/trainer1-love.webp', 'assets/char/v2/trainer1-normal.webp', 'assets/char/v2/trainer1-normal2.webp', 'assets/char/v2/trainer1-surprise.webp', 'assets/char/v2/trainer2-grin.webp', 'assets/char/v2/trainer2-laugh.webp', 'assets/char/v2/trainer2-normal.webp', 'assets/char/v2/trainer2-surprise.webp',

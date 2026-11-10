@@ -470,3 +470,7 @@ button.cy:active { transform: scale(.97); }
 .topic .tp-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0; }
 .topic.on { border-color: var(--accent); background: var(--soft); }
 .topic.on .tp-dot { border: 5px solid var(--accent); }
+/* トップ画面の上下をぼかして、時計・電池の部分やホームバーとなじませる */
+.title-screen::before, .title-screen::after { content: ''; position: absolute; left: 0; right: 0; z-index: 4; pointer-events: none; }
+.title-screen::before { top: 0; height: 90px; background: linear-gradient(#FC6CBA, rgba(252, 108, 186, .6) 35%, rgba(252, 108, 186, 0)); }
+.title-screen::after { bottom: 0; height: 110px; background: linear-gradient(rgba(253, 150, 169, 0), rgba(253, 150, 169, .55) 60%, rgba(253, 150, 169, .85)); }
