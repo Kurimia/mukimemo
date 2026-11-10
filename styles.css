@@ -474,3 +474,20 @@ button.cy:active { transform: scale(.97); }
 .title-screen::before, .title-screen::after { content: ''; position: absolute; left: 0; right: 0; z-index: 4; pointer-events: none; }
 .title-screen::before { top: 0; height: 90px; background: linear-gradient(#FC6CBA, rgba(252, 108, 186, .6) 35%, rgba(252, 108, 186, 0)); }
 .title-screen::after { bottom: 0; height: 110px; background: linear-gradient(rgba(253, 150, 169, 0), rgba(253, 150, 169, .55) 60%, rgba(253, 150, 169, .85)); }
+
+/* ---------- マイ食事：セットの分類（ドラッグで移動） ---------- */
+.sgroups { display: flex; flex-direction: column; gap: 10px; }
+.sgrp { border: 1.5px dashed var(--line); border-radius: 18px; padding: 8px; background: var(--soft); }
+.sghead { display: flex; align-items: center; gap: 8px; padding: 2px 6px 6px; font-size: 14px; }
+.sgic { display: flex; color: var(--accent); }
+.sglist { display: flex; flex-direction: column; gap: 6px; min-height: 8px; }
+.srow { display: flex; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding-right: 8px; }
+.srow > button:first-child { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 6px 8px 14px; text-align: left; color: var(--text); }
+.sgempty { display: none; text-align: center; font-size: 12px; color: var(--sub); padding: 10px 0; }
+.sglist:not(:has(.srow)) .sgempty { display: block; }
+.srow.sph { opacity: .35; border-style: dashed; }
+.sghost { position: fixed; z-index: 200; pointer-events: none; box-shadow: 0 12px 30px rgba(0, 0, 0, .22); transform: scale(1.02); background: var(--card); }
+details.othersets summary { list-style: none; cursor: pointer; font-size: 13px; font-weight: 700; color: var(--sub); min-height: 40px; display: flex; align-items: center; gap: 6px; }
+details.othersets summary::-webkit-details-marker { display: none; }
+details.othersets summary::after { content: '▾'; font-size: 11px; }
+details.othersets[open] summary::after { content: '▴'; }

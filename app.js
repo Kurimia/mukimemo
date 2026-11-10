@@ -516,7 +516,11 @@ function mealInputView() {
       <span class="t">${esc(name)}</span>${detail ? `<span class="d">${esc(detail)}</span>` : ''}<span class="kcal num"><b>${fmtNum(kcal)}</b><small> kcal</small></span>
       ${n > 1 ? `<span class="cnt num">×${n}</span>` : `<span class="tick">${IC.check(14)}</span>`}</button>`;
   };
-  const setGrid = S.sets.map((s) => card('set:' + s.id, s.name, setTotals(s).kcal, setDetail(s))).join('');
+  // この枠のセットを先に、ほかの枠のセットはその下に
+  const mine = S.sets.filter((x) => x.slot === U.slot);
+  const others = S.sets.filter((x) => x.slot !== U.slot);
+  const setGrid = mine.map((x) => card('set:' + x.id, x.name, setTotals(x).kcal, setDetail(x))).join('');
+  const otherGrid = others.map((x) => card('set:' + x.id, x.name, setTotals(x).kcal, setDetail(x))).join('');
   const foodGrid = S.foods.filter((f) => !f.hidden).map((f) => card('food:' + f.id, f.name, f.kcal, '')).join('');
   return `<div class="page" data-p="mealInput"><div class="inner">
     <div class="head" style="justify-content:flex-start">
@@ -528,7 +532,8 @@ function mealInputView() {
     ${recorded}${prevBtn}
     <div style="display:flex;align-items:center;justify-content:space-between"><h2 class="sectitle">セット</h2>
       <button data-act="openMyMeals" data-back="mealInput" class="acc" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;min-height:40px">${IC.pencil(16)}編集</button></div>
-    <div class="mgrid">${setGrid}</div>
+    ${mine.length ? `<div class="mgrid">${setGrid}</div>` : `<p class="sub" style="font-size:12px;margin:-4px 2px 0">「${s.label}」のセットはまだありません。編集からドラッグで分けられます</p>`}
+    ${others.length ? `<details class="othersets"${mine.length ? '' : ' open'}><summary>ほかのセット（${others.length}）</summary><div class="mgrid">${otherGrid}</div></details>` : ''}
     <h2 class="sectitle">単品</h2>
     <div class="mgrid">${foodGrid}</div>
     <button data-act="openPage" data-page="quickAdd" style="display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px;border:1.5px dashed var(--dash);border-radius:16px;text-align:left">
@@ -1428,11 +1433,20 @@ function pfcLine(t) {
 }
 
 function myMealsView() {
-  const setRows = S.sets.map((s) => {
+  const row = (s) => {
     const t = setTotals(s);
-    return `<button data-act="openSetEdit" data-id="${s.id}" style="min-height:64px;padding-top:10px;padding-bottom:10px">
+    return `<div class="srow" data-set="${s.id}"><button data-act="openSetEdit" data-id="${s.id}">
       <span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:700">${esc(s.name)}</span><span class="sub" style="display:block;font-size:12px;margin-top:2px;line-height:1.5">${esc(setDetail(s))}</span></span>
-      <span class="kcal num"><b style="font-size:18px">${fmtNum(t.kcal)}</b><small> kcal</small></span><span class="sub">${IC.chevR()}</span></button>`;
+      <span class="kcal num"><b style="font-size:17px">${fmtNum(t.kcal)}</b><small> kcal</small></span></button>${gripBtn(s.name)}</div>`;
+  };
+  // 朝・昼・間食・夜・夜の間食の枠。⠿ をドラッグして、枠のあいだを自由に移動できる
+  const groups = [...SLOTS.map((sl) => ({ id: sl.id, label: sl.label, icon: IC[sl.icon](20) })), { id: '', label: 'その他', icon: IC.plus(18) }];
+  const setRows = groups.map((g) => {
+    const list = S.sets.filter((s) => (s.slot || '') === g.id);
+    return `<section class="sgrp" data-slot="${g.id}" aria-label="${g.label}のセット">
+      <div class="sghead"><span class="sgic">${g.icon}</span><b>${g.label}</b><span class="sub num" style="font-size:12px;margin-left:auto">${list.length}</span></div>
+      <div class="sglist">${list.map(row).join('')}<p class="sgempty">ここにドラッグ</p></div>
+    </section>`;
   }).join('');
   const foodRows = S.foods.filter((f) => !f.hidden).map((f) => `<button data-act="openFoodEdit" data-id="${f.id}" style="min-height:56px">
       <span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:700">${esc(f.name)}</span>${pfcLine(f)}</span>
@@ -1440,7 +1454,7 @@ function myMealsView() {
   return `<div class="page" data-p="myMeals"><div class="inner">
     <div class="head" style="justify-content:flex-start"><button class="iconbtn" data-act="closeMyMeals" aria-label="戻る" style="margin-left:-10px">${IC.chevL(24)}</button><h1>マイ食事</h1></div>
     <div style="display:flex;align-items:center;justify-content:space-between"><h2 class="sectitle">セット<span style="font-weight:500">　単品の組み合わせ</span></h2><button class="pill" data-act="openSetEdit" data-id="">${IC.plus(16)}セット</button></div>
-    <div class="list">${setRows}</div>
+    <div class="sgroups">${setRows}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><h2 class="sectitle">単品<span style="font-weight:500">　1つ分の数値</span></h2><button class="pill" data-act="openFoodEdit" data-id="">${IC.plus(16)}単品</button></div>
     <div class="list">${foodRows}</div>
     <p class="sub" style="font-size:12px;line-height:1.6">最初の数値はおおよその目安です。セットに入っている単品の数値を直すときは、セットにも反映するかを選べます。</p>
@@ -1463,6 +1477,7 @@ function editSetView() {
   return `<div class="page" data-p="editSet"><div class="inner">
     <div class="head" style="justify-content:flex-start"><button class="iconbtn" data-act="openPage" data-page="myMeals" aria-label="戻る" style="margin-left:-10px">${IC.chevL(24)}</button><h1>${s.id ? 'セットを編集' : 'セットを作る'}</h1></div>
     <div class="field"><label for="es_name">名前</label><input id="es_name" data-es="name" value="${esc(s.name)}" placeholder="例：朝食セット" style="font-size:17px;font-weight:700;text-align:right"></div>
+    <div class="seg" role="group" aria-label="分類">${[...SLOTS.map((sl) => [sl.id, sl.label]), ['', 'その他']].map(([v, l]) => `<button data-act="setSlot" data-v="${v}" aria-pressed="${(s.slot || '') === v}" style="font-size:12px">${l}</button>`).join('')}</div>
     <div class="soft" style="padding:14px 16px;border-radius:16px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
       <span class="sub" style="font-size:12px">合計</span><b class="num" style="font-size:28px;line-height:1">${fmtNum(t.kcal)}</b><span class="num sub" style="font-size:13px">kcal</span><span style="margin-left:auto">${pfcLine(t)}</span></div>
     <h2 class="sectitle">中身<span style="font-weight:500">　−／＋で0.5ずつ</span></h2>
@@ -1906,7 +1921,7 @@ const A = {
   closeMyMeals() { U.page = U.mmBack || 'settings'; if (U.page === 'mealInput') U.sel = {}; render(); },
   openSetEdit(d) {
     const s = d.id ? setById(d.id) : null;
-    U.editSet = s ? { id: s.id, name: s.name, items: s.items.map((i) => ({ ...i })) } : { id: '', name: '', items: [] };
+    U.editSet = s ? { id: s.id, slot: s.slot || null, name: s.name, items: s.items.map((i) => ({ ...i })) } : { id: '', slot: U.mmBack === 'mealInput' ? U.slot : null, name: '', items: [] };
     U.picker = false; U.page = 'editSet'; render();
   },
   qtyItem(d) { const it = U.editSet.items[Number(d.i)]; it.qty = Math.max(0.5, +(it.qty + Number(d.d)).toFixed(1)); render(); },
@@ -1924,14 +1939,15 @@ const A = {
     const s = U.editSet;
     if (!String(s.name).trim()) { toast('名前を入力してね'); return; }
     if (!s.items.length) { toast('単品を1つ以上入れてね'); return; }
-    const rec = { id: s.id || 's_' + Date.now(), name: String(s.name).trim(), items: s.items.map((i) => ({ ...i })) };
+    const rec = { id: s.id || 's_' + Date.now(), slot: s.slot || null, name: String(s.name).trim(), items: s.items.map((i) => ({ ...i })) };
     const i = S.sets.findIndex((x) => x.id === rec.id);
     if (i >= 0) S.sets[i] = rec; else S.sets.push(rec);
     save(); U.page = 'myMeals'; toast('保存したよ');
   },
+  setSlot(d) { U.editSet.slot = d.v || null; render(); },
   dupSet() {
     const s = U.editSet;
-    U.editSet = { id: '', name: `${String(s.name).trim()}（コピー）`, items: s.items.map((i) => ({ ...i })) };
+    U.editSet = { id: '', slot: s.slot || null, name: `${String(s.name).trim()}（コピー）`, items: s.items.map((i) => ({ ...i })) };
     U.picker = false; render();
     document.querySelector('.page') && (document.querySelector('.page').scrollTop = 0);
     toast(isRobot() ? '複製しました。名前と中身を直して保存してください' : '複製したよ。名前と中身を直して保存してね');
@@ -2190,10 +2206,70 @@ function reorder(kind, from, to) {
 /* ---------- イベント ---------- */
 function bindEvents() {
   const root = document.getElementById('app');
+  // マイ食事のセット：⠿ をドラッグして、枠（朝・昼…）のあいだを移動・並べ替え
+  root.addEventListener('pointerdown', (ev) => {
+    const grip = ev.target.closest('.srow .grip');
+    if (!grip) return;
+    ev.preventDefault(); ev.stopImmediatePropagation();
+    const row = grip.closest('.srow');
+    const r0 = row.getBoundingClientRect();
+    const ghost = row.cloneNode(true);
+    ghost.classList.add('sghost');
+    Object.assign(ghost.style, { left: r0.left + 'px', top: r0.top + 'px', width: r0.width + 'px' });
+    document.body.appendChild(ghost);
+    row.classList.add('sph');
+    const dy0 = ev.clientY - r0.top;
+    const scroller = row.closest('.page');
+    let lastY = ev.clientY, raf = 0;
+    try { grip.setPointerCapture(ev.pointerId); } catch (e) { /* なくても動く */ }
+    const place = (y) => {
+      ghost.style.top = (y - dy0) + 'px';
+      ghost.style.visibility = 'hidden';
+      const under = document.elementFromPoint(r0.left + r0.width / 2, y);
+      ghost.style.visibility = '';
+      const grp = under && under.closest('.sgrp');
+      if (!grp) return;
+      const list = grp.querySelector('.sglist');
+      const rows = [...list.querySelectorAll('.srow')].filter((x) => x !== row);
+      const before = rows.find((x) => { const b = x.getBoundingClientRect(); return y < b.top + b.height / 2; });
+      list.insertBefore(row, before || list.querySelector('.sgempty'));
+    };
+    // 画面の端に近づいたら自動でスクロール
+    const autoScroll = () => {
+      if (!scroller) return;
+      const h = window.innerHeight;
+      const v = lastY < 90 ? -10 : lastY > h - 120 ? 10 : 0;
+      if (v) { scroller.scrollTop += v; place(lastY); }
+      raf = requestAnimationFrame(autoScroll);
+    };
+    raf = requestAnimationFrame(autoScroll);
+    const move = (e) => { lastY = e.clientY; place(e.clientY); };
+    const up = () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      ghost.remove(); row.classList.remove('sph');
+      // 画面の並びどおりに、分類と順番を保存
+      const order = [];
+      document.querySelectorAll('.sgrp').forEach((g) => {
+        g.querySelectorAll('.srow').forEach((x) => {
+          const s = setById(x.dataset.set);
+          if (s) { s.slot = g.dataset.slot || null; order.push(s); }
+        });
+      });
+      if (order.length === S.sets.length) S.sets = order;
+      save(); render();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  });
+
   // ⠿ をドラッグして並べ替え
   root.addEventListener('pointerdown', (ev) => {
     const grip = ev.target.closest('.grip');
-    if (!grip) return;
+    if (!grip || grip.closest('.srow')) return;
     const list = grip.closest('[data-sortable]');
     const row = grip.closest('[data-sort-i]');
     if (!list || !row) return;

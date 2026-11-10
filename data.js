@@ -38,14 +38,14 @@ const DEFAULT_FOODS = [
 
 // セット＝単品の組み合わせ。qty は個数（0.5刻み）
 const DEFAULT_SETS = [
-  { id: 's_breakfast', name: '朝食セット', items: [['f_rice_half', 1], ['f_banana', 1], ['f_blueberry', 1], ['f_protein', 1], ['f_malto', 2]] },
-  { id: 's_lunch_breast', name: '鶏むねランチ', items: [['f_rice_half', 1], ['f_breast', 1], ['f_broccoli', 1], ['f_tamagoyaki', 1]] },
-  { id: 's_lunch_thigh', name: '鶏ももランチ', items: [['f_rice_half', 1], ['f_thigh', 1], ['f_broccoli', 1], ['f_tamagoyaki', 1]] },
-  { id: 's_nabe', name: '鍋セット', items: [['f_breast', 1], ['f_spinach', 1], ['f_shimeji', 1], ['f_egg', 1], ['f_meatball', 1], ['f_mizuna', 1], ['f_rice_half', 1]] },
-  { id: 's_night', name: '寝る前プロテイン', items: [['f_protein', 1], ['f_malto', 2]] },
-  { id: 's_nakau', name: 'なか卯セット', items: [['f_oyakodon', 1], ['f_udon', 1]] },
-  { id: 's_donmaru', name: '丼丸セット', items: [['f_kaisendon', 1], ['f_miso', 1], ['f_natto', 1]] },
-].map((s) => ({ id: s.id, name: s.name, items: s.items.map(([foodId, qty]) => ({ foodId, qty })) }));
+  { id: 's_breakfast', slot: 'breakfast', name: '朝食セット', items: [['f_rice_half', 1], ['f_banana', 1], ['f_blueberry', 1], ['f_protein', 1], ['f_malto', 2]] },
+  { id: 's_lunch_breast', slot: 'lunch', name: '鶏むねランチ', items: [['f_rice_half', 1], ['f_breast', 1], ['f_broccoli', 1], ['f_tamagoyaki', 1]] },
+  { id: 's_lunch_thigh', slot: 'lunch', name: '鶏ももランチ', items: [['f_rice_half', 1], ['f_thigh', 1], ['f_broccoli', 1], ['f_tamagoyaki', 1]] },
+  { id: 's_nabe', slot: 'dinner', name: '鍋セット', items: [['f_breast', 1], ['f_spinach', 1], ['f_shimeji', 1], ['f_egg', 1], ['f_meatball', 1], ['f_mizuna', 1], ['f_rice_half', 1]] },
+  { id: 's_night', slot: 'night', name: '寝る前プロテイン', items: [['f_protein', 1], ['f_malto', 2]] },
+  { id: 's_nakau', slot: 'lunch', name: 'なか卯セット', items: [['f_oyakodon', 1], ['f_udon', 1]] },
+  { id: 's_donmaru', slot: 'dinner', name: '丼丸セット', items: [['f_kaisendon', 1], ['f_miso', 1], ['f_natto', 1]] },
+].map((s) => ({ id: s.id, slot: s.slot, name: s.name, items: s.items.map(([foodId, qty]) => ({ foodId, qty })) }));
 
 // kind: barbell / machine は2.5kg、dumbbell は1kg刻み。bodyweight は回数で伸ばす
 // start は初回の目安。1回やると自動で「確定」に変わる
