@@ -411,7 +411,7 @@ button.cy:active { transform: scale(.97); }
 .title-screen.out { animation: ttOut .38s ease-in forwards; }
 @keyframes ttOut { to { opacity: 0; transform: scale(1.06); } }
 .tt-backdrop { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .13) 0 26px, transparent 26px 56px), linear-gradient(165deg, #F77DB5, #FBB8B0 48%, #FDD9A8 62%, #F78FC0); }
-.tt-stage { position: relative; width: min(100vw, calc(100vh * 2 / 3)); aspect-ratio: 2 / 3; -webkit-mask: linear-gradient(transparent, #000 6%, #000 95%, transparent); mask: linear-gradient(transparent, #000 6%, #000 95%, transparent); }
+.tt-stage { position: absolute; inset: 0; }
 .tt-stage > img, .tt-robots { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .tt-fx { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 .tt-fx .fx { position: absolute; }
