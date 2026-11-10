@@ -1490,6 +1490,7 @@ function totalsText(key) {
   const x = dayTotals(key);
   return `${fmtNum(x.kcal)}kcal・P${Math.round(x.p)}g・F${Math.round(x.f)}g・C${Math.round(x.c)}g`;
 }
+// 相談の内容：記録（共通の前置き）＋ 選んだ相談テーマの質問
 function buildAsk(who) {
   const tab = U.page ? pageTab() : U.tab;
   if (who === 'meal') {
@@ -1497,27 +1498,46 @@ function buildAsk(who) {
     const y = addDays(k, -1);
     const morning = new Date().getHours() < 11 && dayTotals(k).kcal === 0;
     return {
-      who, desc: '今日の食事の記録をコピーして、Claudeを開きます',
-      text: `${persona('meal')}\n\n${profileLine()}\n\n【${mdLabel(k).md}の食事】\n${mealsText(k)}\n合計 ${totalsText(k)}\n\n【前日の合計】${totalsText(y)}\n\n${morning ? '前日の振り返りと、今日の食事プランを提案して。' : '今日の残りの食事のおすすめを教えて。'}`,
+      who, desc: '今日の食事の記録といっしょに、Claudeに送ります', sel: 0,
+      base: `${persona('meal')}\n\n${profileLine()}\n\n【${mdLabel(k).md}の食事】\n${mealsText(k)}\n合計 ${totalsText(k)}\n\n【前日の合計】${totalsText(y)}`,
+      topics: [
+        { label: 'おすすめの食事メニュー', q: morning ? '前日の振り返りと、今日の食事プランを提案して。' : '今日の残りの食事で、目標に近づくおすすめメニューを教えて。' },
+        { label: '今日の食事の評価', q: '今日の食事を評価して。よかった点と、次に気をつけるとよい点を短く教えて。' },
+        { label: '外食・コンビニで選ぶなら？', q: 'これから外食かコンビニで食べるなら、目標に合うおすすめを具体的に教えて。' },
+      ],
     };
   }
   if (tab === 'record') {
     const l = weightList().slice(-21);
     const wa = weekAvgNow();
     const mc = monthlyChange();
+    const g = goal();
+    const ph = PHASES.find((x) => x.id === S.settings.phase);
     return {
-      who, desc: '体重の記録をコピーして、Claudeを開きます',
-      text: `${persona('trainer')}\n\n${profileLine()}\n\n【最近の体重】\n${l.length ? l.map((x) => `${mdLabel(x.date).md} ${fmt1(x.kg)}kg`).join('\n') : 'まだ記録なし'}\n週平均：${wa != null ? fmt1(wa) + 'kg' : '—'}　4週間の変化：${mc != null ? (mc >= 0 ? '+' : '') + fmt1(mc) + 'kg' : '—'}\n\nこの推移を見て、食事やトレーニングで調整すべき点を教えて。`,
+      who, desc: '体重の記録といっしょに、Claudeに送ります', sel: 0,
+      base: `${persona('trainer')}\n\n${profileLine()}\n\n【最近の体重】\n${l.length ? l.map((x) => `${mdLabel(x.date).md} ${fmt1(x.kg)}kg`).join('\n') : 'まだ記録なし'}\n週平均：${wa != null ? fmt1(wa) + 'kg' : '—'}　4週間の変化：${mc != null ? (mc >= 0 ? '+' : '') + fmt1(mc) + 'kg' : '—'}\n\n【期間と目標】${ph.label} ${mdLabel(g.start).md}〜${mdLabel(g.end).md}（あと${Math.max(0, g.left)}日）　目標 ${fmt1(g.target)}kg　今日の目安 ${fmt1(g.expect)}kg`,
+      topics: [
+        { label: '体重の推移を見てほしい', q: 'この推移を見て、食事やトレーニングで調整すべき点を教えて。' },
+        { label: '目標までのペースは大丈夫？', q: '目標体重に対して、今のペースで大丈夫？ 足りない・速すぎるなら、どう調整すればいいか教えて。' },
+        { label: '伸び悩んでるときは？', q: '体重やトレーニングの記録が伸び悩んでいる気がする。見直すポイントを優先順に教えて。' },
+      ],
     };
   }
-  const menu = currentMenu();
+  const menu = S.active ? MENUS.find((m) => m.id === S.active.menuId) : currentMenu();
+  const curEx = S.active ? EXERCISES[S.active.exercises[S.active.idx].exId].name : '';
   const recent = S.workouts.slice(-3).map((w) => `${mdLabel(w.date).md} ${MENUS.find((m) => m.id === w.menuId).name}：` + w.exercises.map((ex) => `${EXERCISES[ex.exId].name} ${EXERCISES[ex.exId].kind === 'bodyweight' ? bwLabel(ex.weight) : fmtKg(ex.weight) + 'kg'} ${ex.sets.filter((s) => s.done).map((s) => s.reps).join('/')}`).join('、')).join('\n');
   const plan = planFor(menu).map((p) => `${EXERCISES[p.exId].name} ${EXERCISES[p.exId].kind === 'bodyweight' ? bwLabel(p.weight) : fmtKg(p.weight) + 'kg'} ${p.sets}×${p.repMax ? `${p.repMin}-${p.repMax}` : '限界'}`).join('\n');
   return {
-    who, desc: 'トレーニングの記録をコピーして、Claudeを開きます',
-    text: `${persona('trainer')}\n\n${profileLine()}\n\n【次のメニュー：${menu.name}】\n${plan}\n\n【最近のトレーニング】\n${recent || 'まだ記録なし'}\n\n今日のトレーニングのアドバイスをちょうだい。`,
+    who, desc: 'トレーニングの記録といっしょに、Claudeに送ります', sel: 0,
+    base: `${persona('trainer')}\n\n${profileLine()}\n\n【${S.active ? '今日' : '次'}のメニュー：${menu.name}】\n${plan}${curEx ? `\n（いまやっている種目：${curEx}）` : ''}\n\n【最近のトレーニング】\n${recent || 'まだ記録なし'}`,
+    topics: [
+      { label: 'トレーニングで意識することは？', q: '今日のメニューで、フォームや意識するポイントを種目ごとに短く教えて。' },
+      { label: '筋肉痛があるんだけど…', q: '筋肉痛が残っているんだけど、今日のトレーニングはどうするのがいい？\n痛い部位と程度：【ここに書く】' },
+      { label: '器具が埋まってる！代わりの種目は？', q: `器具が埋まっていて「${curEx || '【種目名】'}」ができない。同じ部位を鍛えられる代わりの種目を、重さと回数の目安つきで教えて。` },
+    ],
   };
 }
+const askText = (a) => (a.topics ? `${a.base}\n\n${a.topics[a.sel].q}` : a.text);
 
 function askView() {
   const a = U.ask;
@@ -1528,8 +1548,12 @@ function askView() {
       ${isRobot() ? `<span style="width:52px;height:52px;border-radius:50%;background:var(--mute);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;flex:none">${robotSVG(a.who, 38)}</span>` : `<span class="ava" style="background-image:url(assets/char/v2/${a.who}1-normal.webp);${a.who === 'meal' ? 'background-size:140% auto;background-position:50% 6%' : 'background-size:139% auto;background-position:71% 6.9%'}" aria-hidden="true"></span>`}
       <h2 style="font-size:20px">相談してみる？</h2>
     </div>
-    <p class="sub" style="font-size:14px;line-height:1.6">${esc(a.desc)}</p>
-    <div class="pre">${esc(a.text)}</div>
+    ${a.topics ? `<div class="topics" role="radiogroup" aria-label="相談したいこと">
+      <span class="sub" style="font-size:13px;font-weight:700">相談したいことは？</span>
+      ${a.topics.map((t, i) => `<button class="topic${i === a.sel ? ' on' : ''}" data-act="askTopic" data-i="${i}" role="radio" aria-checked="${i === a.sel}"><span class="tp-dot"></span>${esc(t.label)}</button>`).join('')}
+    </div>` : ''}
+    <p class="sub" style="font-size:12px;line-height:1.6">${esc(a.desc)}</p>
+    <div class="pre">${esc(askText(a))}</div>
     <div class="g2"><button class="btn ghost" data-act="closeAsk">やめる</button><button class="btn" data-act="goClaude">聞く</button></div>
   </section>`;
 }
@@ -1914,7 +1938,8 @@ const A = {
   },
   ask(d) { U.ask = buildAsk(d.who); render(); },
   closeAsk() { U.ask = null; render(); },
-  goClaude() { const t = U.ask.text; U.ask = null; render(); openClaude(t); },
+  askTopic(d) { U.ask.sel = Number(d.i); render(); },
+  goClaude() { const t = askText(U.ask); U.ask = null; render(); openClaude(t); },
 };
 
 // 単品を保存。link=false のときは、セットに入っている元の数値を「セット専用」として残す

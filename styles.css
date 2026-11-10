@@ -192,7 +192,7 @@ textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--line); borde
 
 /* ---------- ポップアップ ---------- */
 .dialog { position: fixed; z-index: 51; left: 16px; right: 16px; top: 50%; transform: translateY(-50%); max-width: 520px; margin: 0 auto; background: var(--card); border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 16px 40px var(--shadow); max-height: 80dvh; }
-.dialog .pre { padding: 12px 14px; border-radius: 12px; background: var(--mute); font-size: 13px; line-height: 1.6; color: var(--sub); white-space: pre-wrap; overflow-y: auto; max-height: 34dvh; -webkit-user-select: text; user-select: text; }
+.dialog .pre { padding: 12px 14px; border-radius: 12px; background: var(--mute); font-size: 13px; line-height: 1.6; color: var(--sub); white-space: pre-wrap; overflow-y: auto; max-height: 22dvh; -webkit-user-select: text; user-select: text; }
 .dialog .g2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .scrim { position: fixed; inset: 0; z-index: 50; background: var(--scrim); }
 .toast { position: fixed; z-index: 60; left: 50%; width: max-content; top: calc(var(--st) + 8px); transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 18px; font-size: 14px; font-weight: 700; box-shadow: 0 6px 18px var(--shadow); max-width: calc(100vw - 32px); text-align: center; line-height: 1.5; line-break: strict; text-wrap: balance; }
@@ -463,3 +463,10 @@ button.cy:active { transform: scale(.97); }
 @media (display-mode: standalone) {
   :root { --st: calc(env(safe-area-inset-top, 0px) + 16px); }
 }
+
+/* 相談テーマ */
+.topics { display: flex; flex-direction: column; gap: 6px; }
+.topic { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 0 14px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); color: var(--text); font-size: 15px; font-weight: 700; text-align: left; }
+.topic .tp-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); flex-shrink: 0; }
+.topic.on { border-color: var(--accent); background: var(--soft); }
+.topic.on .tp-dot { border: 5px solid var(--accent); }
