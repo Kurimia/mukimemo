@@ -491,3 +491,9 @@ details.othersets summary { list-style: none; cursor: pointer; font-size: 13px; 
 details.othersets summary::-webkit-details-marker { display: none; }
 details.othersets summary::after { content: '▾'; font-size: 11px; }
 details.othersets[open] summary::after { content: '▴'; }
+
+/* 記録画面：セットのグループ */
+.mgroups { display: flex; flex-direction: column; gap: 10px; }
+.mgrp { border-radius: 18px; padding: 8px; background: var(--soft); }
+.mgrp.cur { box-shadow: inset 0 0 0 2px var(--accent); }
+.mgrp .mgrid { margin: 0; }

@@ -516,11 +516,17 @@ function mealInputView() {
       <span class="t">${esc(name)}</span>${detail ? `<span class="d">${esc(detail)}</span>` : ''}<span class="kcal num"><b>${fmtNum(kcal)}</b><small> kcal</small></span>
       ${n > 1 ? `<span class="cnt num">×${n}</span>` : `<span class="tick">${IC.check(14)}</span>`}</button>`;
   };
-  // この枠のセットを先に、ほかの枠のセットはその下に
-  const mine = S.sets.filter((x) => x.slot === U.slot);
-  const others = S.sets.filter((x) => x.slot !== U.slot);
-  const setGrid = mine.map((x) => card('set:' + x.id, x.name, setTotals(x).kcal, setDetail(x))).join('');
-  const otherGrid = others.map((x) => card('set:' + x.id, x.name, setTotals(x).kcal, setDetail(x))).join('');
+  // セットを枠（朝・昼…）ごとのグループで表示。いま開いている枠のグループをいちばん上に
+  const grpDefs = [...SLOTS.map((sl) => ({ id: sl.id, label: sl.label, icon: IC[sl.icon](18) })), { id: '', label: 'その他', icon: IC.plus(16) }];
+  grpDefs.sort((a, b) => (b.id === U.slot) - (a.id === U.slot));
+  const setGroups = grpDefs.map((g) => {
+    const list = S.sets.filter((x) => (x.slot || '') === g.id);
+    if (!list.length && g.id !== U.slot) return '';
+    return `<section class="mgrp${g.id === U.slot ? ' cur' : ''}" aria-label="${g.label}のセット">
+      <div class="sghead"><span class="sgic">${g.icon}</span><b>${g.label}</b></div>
+      ${list.length ? `<div class="mgrid">${list.map((x) => card('set:' + x.id, x.name, setTotals(x).kcal, setDetail(x))).join('')}</div>` : '<p class="sub" style="font-size:12px;padding:4px 6px 8px">まだありません。「編集」からドラッグで入れられます</p>'}
+    </section>`;
+  }).join('');
   const foodGrid = S.foods.filter((f) => !f.hidden).map((f) => card('food:' + f.id, f.name, f.kcal, '')).join('');
   return `<div class="page" data-p="mealInput"><div class="inner">
     <div class="head" style="justify-content:flex-start">
@@ -532,8 +538,7 @@ function mealInputView() {
     ${recorded}${prevBtn}
     <div style="display:flex;align-items:center;justify-content:space-between"><h2 class="sectitle">セット</h2>
       <button data-act="openMyMeals" data-back="mealInput" class="acc" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;min-height:40px">${IC.pencil(16)}編集</button></div>
-    ${mine.length ? `<div class="mgrid">${setGrid}</div>` : `<p class="sub" style="font-size:12px;margin:-4px 2px 0">「${s.label}」のセットはまだありません。編集からドラッグで分けられます</p>`}
-    ${others.length ? `<details class="othersets"${mine.length ? '' : ' open'}><summary>ほかのセット（${others.length}）</summary><div class="mgrid">${otherGrid}</div></details>` : ''}
+    <div class="mgroups">${setGroups}</div>
     <h2 class="sectitle">単品</h2>
     <div class="mgrid">${foodGrid}</div>
     <button data-act="openPage" data-page="quickAdd" style="display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px;border:1.5px dashed var(--dash);border-radius:16px;text-align:left">
