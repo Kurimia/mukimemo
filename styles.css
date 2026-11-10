@@ -78,7 +78,7 @@ h1, h2, h3, p { margin: 0; }
 .char { position: fixed; z-index: 15; left: -4px; bottom: calc(var(--nav-h) + var(--sb) - 2px); width: min(51vw, 212px); padding: 0; }
 .char img { display: block; width: 100%; height: auto; aspect-ratio: 5 / 6; object-fit: contain; object-position: left bottom; pointer-events: none; -webkit-user-drag: none; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .12)); }
 .char.duo.r img { object-position: right bottom; }
-.ava { width: 52px; height: 52px; border-radius: 50%; flex: none; background-color: var(--mute); background-repeat: no-repeat; background-size: 230% auto; background-position: 50% 3%; border: 2px solid var(--accent); }
+.ava { width: 56px; height: 56px; border-radius: 50%; flex: none; background-color: var(--mute); background-repeat: no-repeat; border: 2px solid var(--accent); }
 .char { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
 .char .robot { display: block; width: 74%; height: auto; margin: 0 0 4px 14%; pointer-events: none; filter: drop-shadow(0 6px 10px rgba(0,0,0,.14)); }
 .char.duo .robot { width: 80%; margin-left: 10%; }

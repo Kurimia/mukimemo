@@ -1525,8 +1525,8 @@ function askView() {
   return `<div class="scrim" data-act="closeAsk"></div>
   <section class="dialog" role="dialog" aria-label="Claudeに聞く">
     <div style="display:flex;align-items:center;gap:12px">
-      ${isRobot() ? `<span style="width:52px;height:52px;border-radius:50%;background:var(--mute);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;flex:none">${robotSVG(a.who, 38)}</span>` : `<span class="ava" style="background-image:url(assets/char/v2/${a.who}1-${a.who === 'meal' ? 'smile' : 'laugh'}.webp)" aria-hidden="true"></span>`}
-      <h2 style="font-size:20px">Claudeに聞いてみる？</h2>
+      ${isRobot() ? `<span style="width:52px;height:52px;border-radius:50%;background:var(--mute);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;flex:none">${robotSVG(a.who, 38)}</span>` : `<span class="ava" style="background-image:url(assets/char/v2/${a.who}1-normal.webp);${a.who === 'meal' ? 'background-size:140% auto;background-position:50% 6%' : 'background-size:139% auto;background-position:71% 6.9%'}" aria-hidden="true"></span>`}
+      <h2 style="font-size:20px">相談してみる？</h2>
     </div>
     <p class="sub" style="font-size:14px;line-height:1.6">${esc(a.desc)}</p>
     <div class="pre">${esc(a.text)}</div>
