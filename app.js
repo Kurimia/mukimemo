@@ -1367,6 +1367,9 @@ function settingsView() {
       <button class="round" style="width:40px;height:40px;background:var(--mute)" data-act="restSet" data-d="-15" aria-label="15秒短く">${IC.minus(18)}</button>
       <b class="num" style="font-size:18px;min-width:52px;text-align:center">${st.rest}<span class="sub" style="font-size:12px;font-weight:500">秒</span></b>
       <button class="round" style="width:40px;height:40px;background:var(--mute)" data-act="restSet" data-d="15" aria-label="15秒長く">${IC.plus(18)}</button></div></div>
+    <h2 class="sectitle">休憩が終わったときの音</h2>
+    <div class="seg" role="group" aria-label="休憩が終わったときの音">${[['mix', '鳴らす'], ['loud', 'マナーでも'], ['off', '鳴らさない']].map(([v, l]) => `<button data-act="soundMode" data-v="${v}" aria-pressed="${(st.sound || 'mix') === v}">${l}</button>`).join('')}</div>
+    <p class="sub" style="font-size:12px;line-height:1.6;margin-top:-4px">${(st.sound || 'mix') === 'loud' ? 'マナーモードでも鳴ります。音楽や動画を再生中は、音が鳴るときに止まります。' : (st.sound || 'mix') === 'off' ? '音は鳴りません。' : '音楽や動画を止めずに、重ねて鳴ります。マナーモードのときは鳴りません。'}</p>
     <h2 class="sectitle">キャラクター</h2>
     <div class="seg" role="group" aria-label="キャラクター">${[['girl', 'ふたり'], ['robot', 'ロボット']].map(([v, l]) => `<button data-act="charMode" data-v="${v}" aria-pressed="${(st.charMode || 'girl') === v}">${l}</button>`).join('')}</div>
     <h2 class="sectitle">いつも同じチャットで相談する</h2>
@@ -1787,6 +1790,7 @@ const A = {
     const left = S.active.exercises.reduce((a, ex) => a + ex.sets.filter((s) => !s.done).length, 0);
     if (left && !confirm(isRobot() ? `まだ${left}セット残っています。トレーニングを終えて記録しますか？` : `まだ${left}セット残ってるよ。ここで終えて記録する？`)) return;
     U.clear = null;
+    keepAwake(false);
     const rec = finishWorkout();
     U.showNext = false;
     U.doneRec = rec; U.doneSay = null; U.page = 'done'; render(); window.scrollTo(0, 0);
@@ -1848,6 +1852,7 @@ const A = {
   goalAuto() { S.settings.goalWeight = null; save(); render(); },
   theme(d) { S.settings.theme = d.v; save(); render(); },
   charMode(d) { setCharMode(d.v); },
+  soundMode(d) { S.settings.sound = d.v; save(); audioUnlock(); render(); if (d.v !== 'off') setTimeout(() => chime('end'), 120); },
   restSet(d) { S.settings.rest = Math.min(300, Math.max(30, S.settings.rest + Number(d.d))); save(); render(); },
   openMyMeals(d) { U.mmBack = d.back || 'settings'; U.page = 'myMeals'; render(); },
   closeMyMeals() { U.page = U.mmBack || 'settings'; if (U.page === 'mealInput') U.sel = {}; render(); },
@@ -2063,6 +2068,46 @@ function resizeImage(file, max) {
   });
 }
 
+/* ---------- 休憩タイマーの音 ---------- */
+let _ac = null;
+function audioUnlock() {
+  const mode = S.settings.sound || 'mix';
+  if (mode === 'off') return;
+  try {
+    // mix：音楽や動画と混ぜて鳴らす（マナーモードでは鳴らない） / loud：マナーモードでも鳴らす（再生中の音楽は止まる）
+    if (navigator.audioSession) navigator.audioSession.type = mode === 'loud' ? 'playback' : 'ambient';
+    if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (_ac.state === 'suspended') _ac.resume();
+  } catch (e) { /* 音が出せない環境では何もしない */ }
+}
+function chime(kind) {
+  if ((S.settings.sound || 'mix') === 'off' || !_ac) return;
+  try {
+    if (_ac.state === 'suspended') _ac.resume();
+    const t0 = _ac.currentTime + 0.02;
+    const notes = kind === 'tick' ? [[1046, 0, 0.12]] : [[784, 0, 0.35], [1046, 0.16, 0.35], [1318, 0.32, 0.5], [1568, 0.5, 0.7]];
+    notes.forEach(([f, d, len]) => {
+      const o = _ac.createOscillator(), g = _ac.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + d);
+      g.gain.exponentialRampToValueAtTime(kind === 'tick' ? 0.25 : 0.5, t0 + d + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + len);
+      o.connect(g).connect(_ac.destination);
+      o.start(t0 + d); o.stop(t0 + d + len + 0.05);
+    });
+  } catch (e) { /* 何もしない */ }
+}
+// トレーニング中は画面を消さない（消えるとタイマーも音も止まるため）
+let _wake = null;
+async function keepAwake(on) {
+  try {
+    if (on && !_wake && 'wakeLock' in navigator && document.visibilityState === 'visible') {
+      _wake = await navigator.wakeLock.request('screen');
+      _wake.addEventListener('release', () => { _wake = null; });
+    } else if (!on && _wake) { await _wake.release(); _wake = null; }
+  } catch (e) { _wake = null; }
+}
+
 /* ---------- 並べ替え ---------- */
 function reorder(kind, from, to) {
   const move = (arr) => { const [x] = arr.splice(from, 1); arr.splice(to, 0, x); return arr; };
@@ -2139,6 +2184,8 @@ function bindEvents() {
   ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => root.addEventListener(t, lpCancel));
   root.addEventListener('contextmenu', (ev) => { if (ev.target.closest('.char')) ev.preventDefault(); });
   root.addEventListener('click', (ev) => {
+    // トレーニング中は、タップのたびに音の準備と「画面を消さない」をしておく（iPhoneはタップのときしか音を鳴らす準備ができないため）
+    if (S.active) { audioUnlock(); keepAwake(true); }
     if (lpFired) { lpFired = false; if (ev.target.closest('.char')) return; }
     const el = ev.target.closest('[data-act]');
     if (!el || el.disabled) return;
@@ -2183,14 +2230,17 @@ function bindEvents() {
   // 休憩タイマー
   setInterval(() => {
     const a = S.active;
-    if (!a || !a.restEnd || U.page !== 'workout') return;
+    if (!a || !a.restEnd) return;
     const left = Math.ceil((a.restEnd - Date.now()) / 1000);
     if (left <= 0) {
       a.restEnd = null; save();
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      chime('end');
       U.said.workout = pick(T.restEnd);
       render(); return;
     }
+    if (left <= 3 && a.lastBeep !== left) { a.lastBeep = left; chime('tick'); }
+    if (U.page !== 'workout') return;
     // 残り10秒で声かけ
     if (left <= 10 && !a.restWarned) { a.restWarned = true; U.said.workout = pick(T.restEnd); render(); return; }
     // 休憩の途中は雑談
