@@ -261,8 +261,20 @@ function titleView() {
     <p class="tt-tap">タップしてはじめる</p>
   </div>`;
 }
+// キャラが出てきたとき・セリフや表情が変わったときだけ、ちょっと動く（表情ごとに動き方を変える）
+const MOTION = { kyun: 'hop', kyunkyun: 'hop2', surprise: 'jump', grin: 'sway', grin2: 'sway', love: 'tilt', confused: 'tilt', laugh: 'bob', smile: 'bob', normal: 'bob', normal2: 'bob' };
+const _shown = {};
+function motionCls(slotKey, src, line) {
+  const key = `${src}|${line || ''}`;
+  if (_shown[slotKey] === key) return '';
+  _shown[slotKey] = key;
+  const e = (src.match(/-(\w+)\.webp$/) || [])[1] || 'normal';
+  return ` mv-${MOTION[e] || 'bob'}`;
+}
 function charImg(who, line, expr) {
-  return isRobot() ? robotSVG(who) : `<img src="${charSrc(who, line, expr)}" alt="" decoding="sync">`;
+  if (isRobot()) return robotSVG(who);
+  const src = charSrc(who, line, expr);
+  return `<img class="cimg${motionCls('stage-' + who, src, line)}" src="${src}" alt="" decoding="sync">`;
 }
 function robotSVG(who, size) {
   const col = who === 'meal' ? '#2FA866' : '#EE7A26';
@@ -312,7 +324,9 @@ function phrase(text) {
   if (cur) parts.push(cur);
   return parts.map((x) => (x.trim().length <= 20 ? `<span class="ph">${esc(x)}</span>` : esc(x))).join('');
 }
-const lineBtn = (slot, msg, cls = '') => `<button class="line ${cls}" data-act="nextLine" data-slot="${slot}" aria-label="セリフを切り替える：${esc(msg)}">${phrase(msg)}</button>`;
+const _lastLine = {};
+const lineBtn = (slot, msg, cls = '') => { const pop = _lastLine[slot] !== msg ? ' pop' : ''; _lastLine[slot] = msg; return lineBtnHtml(slot, msg, cls + pop); };
+const lineBtnHtml = (slot, msg, cls = '') => `<button class="line ${cls}" data-act="nextLine" data-slot="${slot}" aria-label="セリフを切り替える：${esc(msg)}">${phrase(msg)}</button>`;
 
 function charStage(who, msg, extra = '', slot = who) {
   const c = CHARACTERS[who];
@@ -1085,8 +1099,8 @@ function recordView() {
 
 // 記録画面：トレーナー（左）と食事管理士（右）が並ぶ
 function charDuo(trainerMsg, mealMsg) {
-  return `<button class="char duo l${isRobot() ? ' bot' : ''}" data-act="ask" data-who="trainer" aria-label="${charName('trainer')}に相談する（長押しで表示を切り替え）">${isRobot() ? robotSVG('trainer') : `<span class="bust"><img src="${charSrc('trainer', trainerMsg, null, [1])}" alt="" decoding="sync"></span>`}</button>
-  <button class="char duo r${isRobot() ? ' bot' : ''}" data-act="ask" data-who="meal" aria-label="${charName('meal')}に相談する（長押しで表示を切り替え）">${isRobot() ? robotSVG('meal') : `<span class="bust"><img src="${charSrc('meal', mealMsg)}" alt="" decoding="sync"></span>`}</button>
+  return `<button class="char duo l${isRobot() ? ' bot' : ''}" data-act="ask" data-who="trainer" aria-label="${charName('trainer')}に相談する（長押しで表示を切り替え）">${isRobot() ? robotSVG('trainer') : `<span class="bust">${(() => { const src = charSrc('trainer', trainerMsg, null, [1]); return `<img class="cimg${motionCls('duo-trainer', src, trainerMsg)}" src="${src}" alt="" decoding="sync">`; })()}</span>`}</button>
+  <button class="char duo r${isRobot() ? ' bot' : ''}" data-act="ask" data-who="meal" aria-label="${charName('meal')}に相談する（長押しで表示を切り替え）">${isRobot() ? robotSVG('meal') : `<span class="bust">${(() => { const src = charSrc('meal', mealMsg); return `<img class="cimg${motionCls('duo-meal', src, mealMsg)}" src="${src}" alt="" decoding="sync">`; })()}</span>`}</button>
   <div class="duobub">${lineBtn('record', trainerMsg, 'l')}${lineBtn('recordMeal', mealMsg, 'r')}</div>`;
 }
 

@@ -435,3 +435,25 @@ button.cy:active { transform: scale(.97); }
 @keyframes ttIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translateX(-50%); } }
 @keyframes ttBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .title-screen *, .title-screen.out { animation: none !important; } }
+
+/* ---------- キャラのちょっとした動き ---------- */
+/* ふだんは、ゆっくり呼吸するように */
+.char:not(.bot) { transform-origin: 50% 100%; animation: breathe 3.6s ease-in-out infinite; }
+@keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.008, 1.016); } }
+/* 登場・セリフが変わったとき（表情ごと） */
+.cimg { transform-origin: 50% 100%; }
+.mv-bob { animation: mvBob .55s ease-out both; }
+.mv-hop { animation: mvHop .7s cubic-bezier(.3, 1.4, .5, 1) both; }
+.mv-hop2 { animation: mvHop .65s cubic-bezier(.3, 1.4, .5, 1) 2 both; }
+.mv-jump { animation: mvJump .5s cubic-bezier(.2, 1.6, .4, 1) both; }
+.mv-sway { animation: mvSway .8s ease-in-out both; }
+.mv-tilt { animation: mvTilt .8s ease-in-out both; }
+@keyframes mvBob { 0% { transform: translateY(6px); } 55% { transform: translateY(-5px); } 100% { transform: none; } }
+@keyframes mvHop { 0% { transform: translateY(0) scale(1, 1); } 20% { transform: translateY(0) scale(1.04, .95); } 50% { transform: translateY(-14px) scale(.98, 1.03); } 75% { transform: translateY(0) scale(1.03, .97); } 100% { transform: none; } }
+@keyframes mvJump { 0% { transform: translateY(0); } 35% { transform: translateY(-16px) scale(1.03); } 70% { transform: translateY(2px) scale(1.02, .97); } 100% { transform: none; } }
+@keyframes mvSway { 0% { transform: rotate(0); } 30% { transform: rotate(-3deg) translateX(-3px); } 65% { transform: rotate(2.5deg) translateX(3px); } 100% { transform: none; } }
+@keyframes mvTilt { 0% { transform: rotate(0); } 40% { transform: rotate(4deg) translateY(-3px); } 100% { transform: none; } }
+/* 吹き出しもセリフが変わったときに少しだけ弾む */
+.line.pop { animation: linePop .35s cubic-bezier(.3, 1.5, .5, 1) both; }
+@keyframes linePop { 0% { transform: scale(.94); opacity: .4; } 100% { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .char, .cimg, .line.pop { animation: none !important; } }
