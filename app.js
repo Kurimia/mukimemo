@@ -516,18 +516,19 @@ function mealInputView() {
       <span class="t">${esc(name)}</span>${detail ? `<span class="d">${esc(detail)}</span>` : ''}<span class="kcal num"><b>${fmtNum(kcal)}</b><small> kcal</small></span>
       ${n > 1 ? `<span class="cnt num">×${n}</span>` : `<span class="tick">${IC.check(14)}</span>`}</button>`;
   };
-  // セットを枠（朝・昼…）ごとのグループで表示。いま開いている枠のグループをいちばん上に
-  const grpDefs = [...SLOTS.map((sl) => ({ id: sl.id, label: sl.label, icon: IC[sl.icon](18) })), { id: '', label: 'その他', icon: IC.plus(16) }];
+  // セットと単品を、枠（朝・昼…）ごとのグループで表示。いま開いている枠のグループをいちばん上に
+  // カードを長押しすると、ドラッグでほかのグループへ移したり、順番を入れ替えたりできる
+  const grpDefs = slotGroups(18);
   grpDefs.sort((a, b) => (b.id === U.slot) - (a.id === U.slot));
-  const setGroups = grpDefs.map((g) => {
-    const list = S.sets.filter((x) => (x.slot || '') === g.id);
-    if (!list.length && g.id !== U.slot) return '';
-    return `<section class="mgrp${g.id === U.slot ? ' cur' : ''}" aria-label="${g.label}のセット">
-      <div class="sghead"><span class="sgic">${g.icon}</span><b>${g.label}</b></div>
-      ${list.length ? `<div class="mgrid">${list.map((x) => card('set:' + x.id, x.name, setTotals(x).kcal, setDetail(x))).join('')}</div>` : '<p class="sub" style="font-size:12px;padding:4px 6px 8px">まだありません。「編集」からドラッグで入れられます</p>'}
+  const groupsHtml = (kind, all, toCard) => grpDefs.map((g) => {
+    const list = all.filter((x) => (x.slot || '') === g.id);
+    return `<section class="mgrp${g.id === U.slot ? ' cur' : ''}${list.length ? '' : ' empty'}" data-slot="${g.id}" aria-label="${g.label}の${kind === 'set' ? 'セット' : '単品'}">
+      <div class="sghead"><span class="sgic">${g.icon}</span><b>${g.label}</b>${list.length ? '' : '<span class="sub" style="font-size:11px;margin-left:auto">長押しでここへ移動</span>'}</div>
+      <div class="mgrid">${list.map(toCard).join('')}</div>
     </section>`;
   }).join('');
-  const foodGrid = S.foods.filter((f) => !f.hidden).map((f) => card('food:' + f.id, f.name, f.kcal, '')).join('');
+  const setGroups = groupsHtml('set', S.sets, (x) => card('set:' + x.id, x.name, setTotals(x).kcal, setDetail(x)));
+  const foodGroups = groupsHtml('food', S.foods.filter((f) => !f.hidden), (f) => card('food:' + f.id, f.name, f.kcal, ''));
   return `<div class="page" data-p="mealInput"><div class="inner">
     <div class="head" style="justify-content:flex-start">
       <button class="iconbtn" data-act="closePage" aria-label="閉じる" style="margin-left:-10px">${IC.close()}</button>
@@ -538,9 +539,9 @@ function mealInputView() {
     ${recorded}${prevBtn}
     <div style="display:flex;align-items:center;justify-content:space-between"><h2 class="sectitle">セット</h2>
       <button data-act="openMyMeals" data-back="mealInput" class="acc" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;min-height:40px">${IC.pencil(16)}編集</button></div>
-    <div class="mgroups">${setGroups}</div>
+    <div class="mgroups" data-kind="set">${setGroups}</div>
     <h2 class="sectitle">単品</h2>
-    <div class="mgrid">${foodGrid}</div>
+    <div class="mgroups" data-kind="food">${foodGroups}</div>
     <button data-act="openPage" data-page="quickAdd" style="display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px;border:1.5px dashed var(--dash);border-radius:16px;text-align:left">
       <span class="acc">${IC.chat(22)}</span><span style="flex:1;font-size:15px;font-weight:700">外食・その他</span><span class="sub" style="font-size:12px">Claudeに聞く</span><span class="sub">${IC.chevR()}</span></button>
   </div></div>
@@ -1437,31 +1438,35 @@ function pfcLine(t) {
   return `<span class="sub num" style="font-size:12px">P ${fmt1(t.p)}　F ${fmt1(t.f)}　C ${fmt1(t.c)}</span>`;
 }
 
+const slotGroups = (sz) => [...SLOTS.map((sl) => ({ id: sl.id, label: sl.label, icon: IC[sl.icon](sz) })), { id: '', label: 'その他', icon: IC.plus(sz - 2) }];
+
 function myMealsView() {
   const row = (s) => {
     const t = setTotals(s);
-    return `<div class="srow" data-set="${s.id}"><button data-act="openSetEdit" data-id="${s.id}">
+    return `<div class="srow" data-sid="${s.id}"><button data-act="openSetEdit" data-id="${s.id}">
       <span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:700">${esc(s.name)}</span><span class="sub" style="display:block;font-size:12px;margin-top:2px;line-height:1.5">${esc(setDetail(s))}</span></span>
       <span class="kcal num"><b style="font-size:17px">${fmtNum(t.kcal)}</b><small> kcal</small></span></button>${gripBtn(s.name)}</div>`;
   };
   // 朝・昼・間食・夜・夜の間食の枠。⠿ をドラッグして、枠のあいだを自由に移動できる
-  const groups = [...SLOTS.map((sl) => ({ id: sl.id, label: sl.label, icon: IC[sl.icon](20) })), { id: '', label: 'その他', icon: IC.plus(18) }];
-  const setRows = groups.map((g) => {
-    const list = S.sets.filter((s) => (s.slot || '') === g.id);
-    return `<section class="sgrp" data-slot="${g.id}" aria-label="${g.label}のセット">
+  const frow = (f) => `<div class="srow" data-sid="${f.id}"><button data-act="openFoodEdit" data-id="${f.id}">
+      <span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:700">${esc(f.name)}</span>${pfcLine(f)}</span>
+      <span class="kcal num"><b style="font-size:17px">${fmtNum(f.kcal)}</b><small> kcal</small></span></button>${gripBtn(f.name)}</div>`;
+  const groups = slotGroups(20);
+  const grouped = (all, toRow, what) => groups.map((g) => {
+    const list = all.filter((s) => (s.slot || '') === g.id);
+    return `<section class="sgrp" data-slot="${g.id}" aria-label="${g.label}の${what}">
       <div class="sghead"><span class="sgic">${g.icon}</span><b>${g.label}</b><span class="sub num" style="font-size:12px;margin-left:auto">${list.length}</span></div>
-      <div class="sglist">${list.map(row).join('')}<p class="sgempty">ここにドラッグ</p></div>
+      <div class="sglist">${list.map(toRow).join('')}<p class="sgempty">ここにドラッグ</p></div>
     </section>`;
   }).join('');
-  const foodRows = S.foods.filter((f) => !f.hidden).map((f) => `<button data-act="openFoodEdit" data-id="${f.id}" style="min-height:56px">
-      <span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:700">${esc(f.name)}</span>${pfcLine(f)}</span>
-      <span class="kcal num"><b style="font-size:18px">${fmtNum(f.kcal)}</b><small> kcal</small></span><span class="sub">${IC.chevR()}</span></button>`).join('');
+  const setRows = grouped(S.sets, row, 'セット');
+  const foodRows = grouped(S.foods.filter((f) => !f.hidden), frow, '単品');
   return `<div class="page" data-p="myMeals"><div class="inner">
     <div class="head" style="justify-content:flex-start"><button class="iconbtn" data-act="closeMyMeals" aria-label="戻る" style="margin-left:-10px">${IC.chevL(24)}</button><h1>マイ食事</h1></div>
     <div style="display:flex;align-items:center;justify-content:space-between"><h2 class="sectitle">セット<span style="font-weight:500">　単品の組み合わせ</span></h2><button class="pill" data-act="openSetEdit" data-id="">${IC.plus(16)}セット</button></div>
-    <div class="sgroups">${setRows}</div>
+    <div class="sgroups" data-kind="set">${setRows}</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><h2 class="sectitle">単品<span style="font-weight:500">　1つ分の数値</span></h2><button class="pill" data-act="openFoodEdit" data-id="">${IC.plus(16)}単品</button></div>
-    <div class="list">${foodRows}</div>
+    <div class="sgroups" data-kind="food">${foodRows}</div>
     <p class="sub" style="font-size:12px;line-height:1.6">最初の数値はおおよその目安です。セットに入っている単品の数値を直すときは、セットにも反映するかを選べます。</p>
   </div></div>`;
 }
@@ -1768,7 +1773,7 @@ const A = {
     const first = U.date === today() && !hasMeal(today());
     const day = dayMeals(U.date);
     day[U.slot] = (day[U.slot] || []).concat([item]);
-    if (q.save) S.foods.push({ id: 'f_' + Date.now(), ...item });
+    if (q.save) S.foods.push({ id: 'f_' + Date.now(), slot: U.slot, ...item });
     save();
     U.page = null; U.tab = 'meal';
     U.said.meal = mealRecordLine();
@@ -2191,6 +2196,25 @@ async function keepAwake(on) {
   } catch (e) { _wake = null; }
 }
 
+/* ---------- セット・単品の分類と順番を、画面の並びどおりに保存 ---------- */
+function saveGroupOrder(box, grpSel, itemSel) {
+  if (!box) return;
+  const kind = box.dataset.kind;
+  const arr = kind === 'set' ? S.sets : S.foods;
+  const byId = (id) => arr.find((x) => x.id === id);
+  const order = [];
+  box.querySelectorAll(grpSel).forEach((g) => {
+    g.querySelectorAll(itemSel).forEach((el) => {
+      const id = el.dataset.sid || (el.dataset.id || '').split(':')[1];
+      const x = byId(id);
+      if (x && !order.includes(x)) { x.slot = g.dataset.slot || null; order.push(x); }
+    });
+  });
+  // 画面に出ていないもの（非表示の単品など）はうしろに残す
+  arr.forEach((x) => { if (!order.includes(x)) order.push(x); });
+  if (kind === 'set') S.sets = order; else S.foods = order;
+}
+
 /* ---------- 並べ替え ---------- */
 function reorder(kind, from, to) {
   const move = (arr) => { const [x] = arr.splice(from, 1); arr.splice(to, 0, x); return arr; };
@@ -2211,6 +2235,74 @@ function reorder(kind, from, to) {
 /* ---------- イベント ---------- */
 function bindEvents() {
   const root = document.getElementById('app');
+  // 食事を記録する画面：カードを長押しして、グループのあいだを移動・並べ替え
+  let cdrag = null, cTimer = null, cStart = null, cSuppress = false;
+  root.addEventListener('pointerdown', (ev) => {
+    const cardEl = ev.target.closest('.mgroups .mcard');
+    if (!cardEl) return;
+    cStart = { x: ev.clientX, y: ev.clientY, el: cardEl };
+    clearTimeout(cTimer);
+    cTimer = setTimeout(() => {
+      const r0 = cardEl.getBoundingClientRect();
+      const ghost = cardEl.cloneNode(true);
+      ghost.classList.add('sghost');
+      Object.assign(ghost.style, { left: r0.left + 'px', top: r0.top + 'px', width: r0.width + 'px', height: r0.height + 'px' });
+      document.body.appendChild(ghost);
+      cardEl.classList.add('sph');
+      cdrag = { el: cardEl, ghost, dx: cStart.x - r0.left, dy: cStart.y - r0.top, box: cardEl.closest('[data-kind]'), lastY: cStart.y, raf: 0 };
+      document.querySelectorAll('.mgroups').forEach((b) => b.classList.add('dragging'));
+      const scroller = cardEl.closest('.page');
+      const auto = () => {
+        if (!cdrag) return;
+        const h = window.innerHeight;
+        const v = cdrag.lastY < 100 ? -10 : cdrag.lastY > h - 140 ? 10 : 0;
+        if (v && scroller) scroller.scrollTop += v;
+        cdrag.raf = requestAnimationFrame(auto);
+      };
+      cdrag.raf = requestAnimationFrame(auto);
+    }, 380);
+  });
+  const cMove = (ev) => {
+    if (!cdrag) {
+      if (cStart && Math.hypot(ev.clientX - cStart.x, ev.clientY - cStart.y) > 8) { clearTimeout(cTimer); cStart = null; }
+      return;
+    }
+    const d = cdrag;
+    d.lastY = ev.clientY;
+    d.ghost.style.left = (ev.clientX - d.dx) + 'px';
+    d.ghost.style.top = (ev.clientY - d.dy) + 'px';
+    d.ghost.style.visibility = 'hidden';
+    const under = document.elementFromPoint(ev.clientX, ev.clientY);
+    d.ghost.style.visibility = '';
+    const grp = under && under.closest('.mgrp');
+    if (!grp || grp.closest('[data-kind]') !== d.box) return;
+    const grid = grp.querySelector('.mgrid');
+    const cards = [...grid.querySelectorAll('.mcard')].filter((x) => x !== d.el);
+    const before = cards.find((x) => {
+      const b = x.getBoundingClientRect();
+      return ev.clientY < b.top || (ev.clientY <= b.bottom && ev.clientX < b.left + b.width / 2);
+    });
+    grid.insertBefore(d.el, before || null);
+    grp.classList.remove('empty');
+  };
+  const cEnd = () => {
+    clearTimeout(cTimer); cStart = null;
+    if (!cdrag) return;
+    const d = cdrag; cdrag = null;
+    cancelAnimationFrame(d.raf);
+    d.ghost.remove(); d.el.classList.remove('sph');
+    document.querySelectorAll('.mgroups').forEach((b) => b.classList.remove('dragging'));
+    saveGroupOrder(d.box, '.mgrp', '.mcard');
+    cSuppress = true; setTimeout(() => { cSuppress = false; }, 200);
+    save(); render();
+  };
+  window.addEventListener('pointermove', cMove);
+  window.addEventListener('pointerup', cEnd);
+  window.addEventListener('pointercancel', cEnd);
+  // ドラッグ中は画面がスクロールしないように
+  document.addEventListener('touchmove', (e) => { if (cdrag) e.preventDefault(); }, { passive: false });
+  root.addEventListener('contextmenu', (ev) => { if (ev.target.closest('.mgroups .mcard')) ev.preventDefault(); });
+
   // マイ食事のセット：⠿ をドラッグして、枠（朝・昼…）のあいだを移動・並べ替え
   root.addEventListener('pointerdown', (ev) => {
     const grip = ev.target.closest('.srow .grip');
@@ -2233,7 +2325,7 @@ function bindEvents() {
       const under = document.elementFromPoint(r0.left + r0.width / 2, y);
       ghost.style.visibility = '';
       const grp = under && under.closest('.sgrp');
-      if (!grp) return;
+      if (!grp || grp.closest('[data-kind]') !== row.closest('[data-kind]')) return; // セットと単品はまたがない
       const list = grp.querySelector('.sglist');
       const rows = [...list.querySelectorAll('.srow')].filter((x) => x !== row);
       const before = rows.find((x) => { const b = x.getBoundingClientRect(); return y < b.top + b.height / 2; });
@@ -2255,15 +2347,7 @@ function bindEvents() {
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', up);
       ghost.remove(); row.classList.remove('sph');
-      // 画面の並びどおりに、分類と順番を保存
-      const order = [];
-      document.querySelectorAll('.sgrp').forEach((g) => {
-        g.querySelectorAll('.srow').forEach((x) => {
-          const s = setById(x.dataset.set);
-          if (s) { s.slot = g.dataset.slot || null; order.push(s); }
-        });
-      });
-      if (order.length === S.sets.length) S.sets = order;
+      saveGroupOrder(row.closest('[data-kind]'), '.sgrp', '.srow');
       save(); render();
     };
     window.addEventListener('pointermove', move);
@@ -2327,6 +2411,7 @@ function bindEvents() {
   ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => root.addEventListener(t, lpCancel));
   root.addEventListener('contextmenu', (ev) => { if (ev.target.closest('.char')) ev.preventDefault(); });
   root.addEventListener('click', (ev) => {
+    if (cSuppress && ev.target.closest('.mcard')) { cSuppress = false; return; }
     // トレーニング中は、タップのたびに音の準備と「画面を消さない」をしておく（iPhoneはタップのときしか音を鳴らす準備ができないため）
     if (S.active) { audioUnlock(); keepAwake(true); }
     if (lpFired) { lpFired = false; if (ev.target.closest('.char')) return; }

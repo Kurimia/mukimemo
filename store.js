@@ -98,6 +98,7 @@ async function loadState() {
     delete S.myMeals;
     // セットの分類（朝・昼・間食・夜・夜の間食）がない古いデータには、初期セットの分類を入れる
     S.sets.forEach((s) => { if (s.slot === undefined) { const d = DEFAULT_SETS.find((x) => x.id === s.id); s.slot = d ? d.slot : null; } });
+    S.foods.forEach((f) => { if (f.slot === undefined) f.slot = DEFAULT_FOOD_SLOT[f.id] || null; });
   }
 }
 

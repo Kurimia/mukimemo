@@ -497,3 +497,8 @@ details.othersets[open] summary::after { content: '▴'; }
 .mgrp { border-radius: 18px; padding: 8px; background: var(--soft); }
 .mgrp.cur { box-shadow: inset 0 0 0 2px var(--accent); }
 .mgrp .mgrid { margin: 0; }
+
+.mgrp.empty .mgrid { min-height: 0; }
+.mgroups.dragging .mgrp.empty .mgrid { min-height: 56px; border: 1.5px dashed var(--line); border-radius: 12px; }
+.mcard { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.mcard.sph { opacity: .3; }

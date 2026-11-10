@@ -36,6 +36,15 @@ const DEFAULT_FOODS = [
   { id: 'f_kaisendon', name: '丼丸 海鮮丼（並）', kcal: 570, p: 26, f: 9, c: 91 },
 ];
 
+// 単品の最初の分類（あとからドラッグで自由に移動できる）
+const DEFAULT_FOOD_SLOT = {
+  f_banana: 'breakfast', f_blueberry: 'breakfast', f_protein: 'breakfast', f_malto: 'breakfast',
+  f_rice_half: 'lunch', f_pack_rice: 'lunch', f_breast: 'lunch', f_thigh: 'lunch', f_broccoli: 'lunch', f_tamagoyaki: 'lunch',
+  f_dango: 'snack', f_nuts: 'snack', f_donut: 'snack',
+  f_egg: 'dinner', f_spinach: 'dinner', f_shimeji: 'dinner', f_meatball: 'dinner', f_mizuna: 'dinner', f_salmon: 'dinner', f_natto: 'dinner', f_miso: 'dinner',
+};
+DEFAULT_FOODS.forEach((f) => { f.slot = DEFAULT_FOOD_SLOT[f.id] || null; });
+
 // セット＝単品の組み合わせ。qty は個数（0.5刻み）
 const DEFAULT_SETS = [
   { id: 's_breakfast', slot: 'breakfast', name: '朝食セット', items: [['f_rice_half', 1], ['f_banana', 1], ['f_blueberry', 1], ['f_protein', 1], ['f_malto', 2]] },
