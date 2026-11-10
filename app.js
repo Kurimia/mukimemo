@@ -349,7 +349,7 @@ function mealView() {
   return `<main class="screen">
     <div class="head">
       <div style="display:flex;align-items:center">
-        <button class="topbtn" data-act="openTitle" aria-label="トップ画面"><img src="assets/icons/icon-180.png" alt=""></button>
+        <button class="topbtn" data-act="openTitle" aria-label="トップ画面">TOP</button>
         <button class="iconbtn" data-act="day" data-d="-1" aria-label="前の日">${IC.chevL()}</button>
         <h1 class="num" style="font-size:20px;font-weight:800">${d.md}<span style="font-size:14px;font-weight:500;color:var(--sub)"> ${d.wd}${isToday ? '・今日' : ''}</span></h1>
         <button class="iconbtn" data-act="day" data-d="1" aria-label="次の日" ${isToday ? 'disabled' : ''}>${IC.chevR(22)}</button>
@@ -576,7 +576,7 @@ function doneTodayView(last) {
       ${pb ? '<span class="badge">自己ベスト</span>' : ''}</div>`;
   }).join('');
   return `<main class="screen">
-    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面"><img src="assets/icons/icon-180.png" alt=""></button><h1>トレーニング</h1></span></div>
+    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面">TOP</button><h1>トレーニング</h1></span></div>
     ${cycleBar(false)}
     <section class="donetoday" aria-label="今日のトレーニング完了">
       <span class="tro">${IC.trophy(34)}</span>
@@ -613,7 +613,7 @@ function trainView() {
     </div>${chal && chal.exId === p.exId ? `<div class="chal-note">${IC.flame(16)}<b>チャレンジ</b><span>${chalText(p.exId, chal.w, chal.reps)}で自己ベスト更新</span></div>` : ''}`;
   }).join('');
   return `<main class="screen">
-    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面"><img src="assets/icons/icon-180.png" alt=""></button><h1>トレーニング</h1></span>${last ? `<span class="sub" style="font-size:13px">前回 <b class="num" style="font-size:15px;color:var(--text)">${mdLabel(last.date).md}</b></span>` : ''}</div>
+    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面">TOP</button><h1>トレーニング</h1></span>${last ? `<span class="sub" style="font-size:13px">前回 <b class="num" style="font-size:15px;color:var(--text)">${mdLabel(last.date).md}</b></span>` : ''}</div>
     ${cycleBar(true)}
     <section class="soft" aria-label="今日のメニュー" style="padding:18px;display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:center;gap:14px">
@@ -1046,7 +1046,7 @@ function recordView() {
   const bests = Object.entries(S.exState).filter(([, v]) => v.best != null).sort((a, b) => (b[1].bestDate || '').localeCompare(a[1].bestDate || '')).slice(0, 3);
   const lastPhoto = PHOTOS.length ? PHOTOS[PHOTOS.length - 1] : null;
   return `<main class="screen">
-    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面"><img src="assets/icons/icon-180.png" alt=""></button><h1>記録</h1></span><button class="iconbtn" data-act="openPage" data-page="settings" aria-label="設定" style="margin-right:-10px"><span class="part" style="width:24px;height:24px;--m:url(assets/icons/gear.png)" aria-hidden="true"></span></button></div>
+    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面">TOP</button><h1>記録</h1></span><button class="iconbtn" data-act="openPage" data-page="settings" aria-label="設定" style="margin-right:-10px"><span class="part" style="width:24px;height:24px;--m:url(assets/icons/gear.png)" aria-hidden="true"></span></button></div>
     ${backupDue() ? `<button class="backup-note" data-act="exportData">${IC.download(20)}<span><b>バックアップしておきましょう</b><small>${S.lastBackup ? `最後のバックアップから${backupDays()}日` : 'まだ一度もバックアップしていません'}</small></span>${IC.chevR()}</button>` : ''}
     <section class="soft" aria-label="今朝の体重" style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;align-items:center;justify-content:space-between"><span class="acc" style="font-size:13px;font-weight:700">今朝の体重${todayKg != null ? '（記録済み）' : ''}</span>${prevKg != null ? `<span class="sub" style="font-size:12px">前回 <b class="num">${fmt1(prevKg)}</b>kg</span>` : ''}</div>
