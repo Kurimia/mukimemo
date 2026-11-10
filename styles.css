@@ -95,7 +95,8 @@ h1, h2, h3, p { margin: 0; }
 .bubble .btn { height: 40px; font-size: 14px; border-radius: 12px; }
 .char.duo { width: min(36vw, 150px); }
 /* 記録画面の2人はバストアップ（胸から上を大きく） */
-.char.duo .bust { display: block; width: 100%; aspect-ratio: 5 / 6; overflow: hidden; }
+.char.duo .bust { display: block; width: 100%; aspect-ratio: 5 / 6; min-height: 0; overflow: visible; clip-path: inset(-80px -40px 0 -40px); }
+/* 下だけ切る（上に跳ねても髪が切れないように） */
 .char.duo .bust img { width: 112%; max-width: none; aspect-ratio: auto; height: auto; margin-left: -6%; object-fit: initial; }
 .char.duo.r { left: auto; right: -4px; }
 .duobub { position: fixed; z-index: 16; left: calc(min(36vw, 150px) - 16px); right: calc(min(36vw, 150px) - 16px); bottom: calc(var(--nav-h) + var(--sb) + 10px); display: flex; flex-direction: column; gap: 8px; }
