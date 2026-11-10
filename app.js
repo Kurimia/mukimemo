@@ -2158,8 +2158,14 @@ function bindEvents() {
     if (el.dataset.chat) {
       if (!S.settings.chatUrl) S.settings.chatUrl = {};
       const v = el.value.trim();
-      S.settings.chatUrl[el.dataset.chat] = /^https:\/\/claude\.ai\//.test(v) ? v : '';
-      if (v && !S.settings.chatUrl[el.dataset.chat]) toast(isRobot() ? 'claude.ai のURLを入力してください' : 'claude.ai のURLを入れてね');
+      // 使えるのはチャットそのもののURL（claude.ai/chat/…）。共有リンク（claude.ai/share/…）は読むだけのコピーなので使えない
+      S.settings.chatUrl[el.dataset.chat] = /^https:\/\/claude\.ai\/chat\/[\w-]+/.test(v) ? v : '';
+      if (v && !S.settings.chatUrl[el.dataset.chat]) {
+        toast(/\/share\//.test(v)
+          ? (isRobot() ? '共有リンクは使えません。claude.ai/chat/… のURLを入力してください' : '共有リンクは使えないの。claude.ai/chat/… のURLを入れてね')
+          : (isRobot() ? 'claude.ai/chat/… のURLを入力してください' : 'claude.ai/chat/… のURLを入れてね'));
+        el.value = '';
+      }
       save();
     }
     if (el.dataset.goal) {
