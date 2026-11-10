@@ -458,3 +458,8 @@ button.cy:active { transform: scale(.97); }
 .line.pop { animation: linePop .35s cubic-bezier(.3, 1.5, .5, 1) both; }
 @keyframes linePop { 0% { transform: scale(.94); opacity: .4; } 100% { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .char, .cimg, .line.pop { animation: none !important; } }
+
+/* ホーム画面から全画面で開いたときは、上の時計・電池の表示と重ならないよう余白を足す */
+@media (display-mode: standalone) {
+  :root { --st: calc(env(safe-area-inset-top, 0px) + 16px); }
+}
