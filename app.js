@@ -443,12 +443,29 @@ function editItemView() {
   const ed = U.editItem;
   const it = slotItems(U.date, ed.slot)[ed.i];
   if (!it) return '';
-  const base = it.base || { kcal: it.kcal / (it.qty || 1), p: it.p / (it.qty || 1), f: it.f / (it.qty || 1), c: it.c / (it.qty || 1) };
+  const base = ed.parts ? partsTotals(ed.parts) : (it.base || { kcal: it.kcal / (it.qty || 1), p: it.p / (it.qty || 1), f: it.f / (it.qty || 1), c: it.c / (it.qty || 1) });
   const v = (k) => base[k] * ed.qty;
+  // セットで記録した食事は、中身をその日だけ調整できる（マイ食事のセットは変わらない）
+  const partRows = ed.parts ? ed.parts.map((pt, i) => {
+    const f = foodById(pt.foodId);
+    if (!f) return '';
+    return `<div style="min-height:52px;padding-top:6px;padding-bottom:6px">
+      <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:700">${esc(f.name)}</span><span class="sub num" style="font-size:11px">${fmtNum(f.kcal * pt.qty)} kcal</span></span>
+      <button class="round" style="width:32px;height:32px;background:var(--mute)" data-act="partQty" data-i="${i}" data-d="-0.5" aria-label="${esc(f.name)}を減らす">${IC.minus(16)}</button>
+      <b class="num" style="min-width:40px;text-align:center;font-size:16px">×${fmtKg(pt.qty)}</b>
+      <button class="round" style="width:32px;height:32px;background:var(--mute)" data-act="partQty" data-i="${i}" data-d="0.5" aria-label="${esc(f.name)}を増やす">${IC.plus(16)}</button>
+      <button class="iconbtn" style="width:32px;margin-right:-8px" data-act="partDel" data-i="${i}" aria-label="${esc(f.name)}を外す">${IC.close(16)}</button></div>`;
+  }).join('') : '';
   return `<div class="sheet-scrim" data-act="closeEditItem"></div>
-  <section class="sheet" role="dialog" aria-label="${esc(it.name)}を直す">
+  <section class="sheet" role="dialog" aria-label="${esc(it.name)}を直す" style="max-height:88dvh;overflow-y:auto">
     <div class="grab"></div>
     <h2 style="font-size:17px">${esc(it.name)}</h2>
+    ${ed.parts ? `<div>
+      <span class="sub" style="font-size:13px">今日の中身<span style="font-size:11px">　この日の記録だけ変わります</span></span>
+      ${ed.parts.length ? `<div class="list" style="margin-top:6px">${partRows}</div>` : '<p class="empty-note">中身がありません</p>'}
+      <button class="btn softbtn sm" data-act="openPartPicker" style="margin-top:8px">${IC.plus(16)}単品を追加</button>
+    </div>
+    <span class="sub" style="font-size:13px;margin-bottom:-6px">全体の量</span>` : ''}
     <div style="display:flex;align-items:center;justify-content:space-between">
       <button class="round" style="width:60px;height:60px;background:var(--soft)" data-act="itemQty" data-d="-0.5" aria-label="量を減らす">${IC.minus(26)}</button>
       <div style="text-align:center"><b class="num" style="font-size:52px;line-height:1">×${fmtKg(ed.qty)}</b>
@@ -463,8 +480,17 @@ function editItemView() {
       <button class="btn ghost" data-act="itemDel" style="flex:0 0 auto;width:96px">${IC.trash(18)}削除</button>
       <button class="btn" data-act="itemSave" style="flex:1">保存</button>
     </div>
-  </section>`;
+  </section>
+  ${U.picker && U.pickFor === 'item' ? pickerView() : ''}`;
 }
+// 中身（単品×個数）の合計
+function partsTotals(parts) {
+  return parts.reduce((a, it) => {
+    const f = foodById(it.foodId);
+    return f ? { kcal: a.kcal + f.kcal * it.qty, p: a.p + f.p * it.qty, f: a.f + f.f * it.qty, c: a.c + f.c * it.qty } : a;
+  }, { kcal: 0, p: 0, f: 0, c: 0 });
+}
+const partsDetail = (parts) => parts.map((it) => { const f = foodById(it.foodId); return f ? f.name + (it.qty !== 1 ? ` ×${fmtKg(it.qty)}` : '') : ''; }).filter(Boolean).join('・');
 
 function mealInputView() {
   const s = SLOTS.find((x) => x.id === U.slot);
@@ -1442,7 +1468,8 @@ function editSetView() {
     <h2 class="sectitle">中身<span style="font-weight:500">　−／＋で0.5ずつ</span></h2>
     ${s.items.length ? `<div class="list">${rows}</div>` : '<p class="empty-note">まだ何も入っていません</p>'}
     <button class="btn softbtn sm" data-act="openPicker">${IC.plus(18)}単品を追加</button>
-    ${s.id ? `<button data-act="deleteSetDef" class="sub" style="display:flex;align-items:center;gap:6px;font-size:14px;min-height:44px;align-self:flex-start">${IC.trash(18)}このセットを削除</button>` : ''}
+    ${s.id ? `<div style="display:flex;justify-content:space-between"><button data-act="dupSet" class="acc" style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;min-height:44px">${IC.paste(18)}複製して新しいセットを作る</button>
+      <button data-act="deleteSetDef" class="sub" style="display:flex;align-items:center;gap:6px;font-size:14px;min-height:44px">${IC.trash(18)}削除</button></div>` : ''}
   </div></div>
   <div class="footer"><button class="btn" data-act="saveSetDef">保存</button></div>
   ${U.picker ? pickerView() : ''}`;
@@ -1453,7 +1480,7 @@ function pickerView() {
   <section class="sheet" role="dialog" aria-label="単品を追加" style="max-height:78dvh;overflow-y:auto">
     <div class="grab"></div>
     <div style="display:flex;align-items:center;justify-content:space-between"><h2 style="font-size:17px">単品を追加</h2>
-      <button class="pill" data-act="newFoodForSet">${IC.plus(16)}新しい単品</button></div>
+      ${U.pickFor === 'item' ? '' : `<button class="pill" data-act="newFoodForSet">${IC.plus(16)}新しい単品</button>`}</div>
     <div class="list">${S.foods.filter((f) => !f.hidden).map((f) => `<button data-act="pickFood" data-id="${f.id}"><span style="flex:1;font-size:15px">${esc(f.name)}</span><span class="kcal num"><b style="font-size:16px">${fmtNum(f.kcal)}</b><small> kcal</small></span></button>`).join('')}</div>
   </section>`;
 }
@@ -1468,7 +1495,8 @@ function editFoodView() {
     <div class="field"><label for="em_kcal">kcal</label><input id="em_kcal" class="num" inputmode="decimal" data-em="kcal" value="${esc(m.kcal)}" placeholder="0" style="font-size:28px"></div>
     <div class="pfc3">${['p', 'f', 'c'].map((k) => `<label><b class="num">${k.toUpperCase()}</b><input class="num" inputmode="decimal" data-em="${k}" value="${esc(m[k])}" placeholder="0"></label>`).join('')}</div>
     ${used.length ? `<p class="sub" style="font-size:12px;line-height:1.6">使っているセット：${esc(used.join('、'))}</p>` : ''}
-    ${m.id ? `<button data-act="deleteFood" class="sub" style="display:flex;align-items:center;gap:6px;font-size:14px;min-height:44px;align-self:flex-start">${IC.trash(18)}この単品を削除</button>` : ''}
+    ${m.id ? `<div style="display:flex;justify-content:space-between"><button data-act="dupFood" class="acc" style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;min-height:44px">${IC.paste(18)}複製して新しい単品を作る</button>
+      <button data-act="deleteFood" class="sub" style="display:flex;align-items:center;gap:6px;font-size:14px;min-height:44px">${IC.trash(18)}削除</button></div>` : ''}
   </div></div>
   <div class="footer"><button class="btn" data-act="saveFood">保存</button></div>`;
 }
@@ -1571,7 +1599,7 @@ function askView() {
     </div>` : ''}
     <p class="sub" style="font-size:12px;line-height:1.6">${esc(a.desc)}</p>
     <div class="pre">${esc(askText(a))}</div>
-    ${chatUrl(a.who) && a.topics
+    ${chatUrl(a.who)
       ? `<button class="btn" data-act="goClaude" data-same="1">いつものチャットで聞く</button>
          <p class="sub" style="font-size:12px;text-align:center;margin-top:-6px">相談文をコピーしてチャットを開きます。入力欄に貼り付けて送ってね</p>
          <div class="g2"><button class="btn ghost" data-act="closeAsk">やめる</button><button class="btn ghost" data-act="goClaude">新しいチャットで</button></div>`
@@ -1639,16 +1667,28 @@ const A = {
   editItem(d) {
     const it = slotItems(U.date, U.slot)[Number(d.i)];
     if (!it) return;
-    U.editItem = { i: Number(d.i), slot: U.slot, to: U.slot, qty: it.qty || 1 };
+    const set = it.from && it.from.startsWith('set:') ? setById(it.from.slice(4)) : null;
+    const parts = it.parts || (set ? set.items : null);
+    U.editItem = { i: Number(d.i), slot: U.slot, to: U.slot, qty: it.qty || 1, parts: parts ? parts.map((x) => ({ ...x })) : null };
     render();
   },
-  closeEditItem() { U.editItem = null; render(); },
+  closeEditItem() { U.editItem = null; U.picker = false; render(); },
+  partQty(d) { const pt = U.editItem.parts[Number(d.i)]; pt.qty = Math.max(0.5, +(pt.qty + Number(d.d)).toFixed(1)); render(); },
+  partDel(d) { U.editItem.parts.splice(Number(d.i), 1); render(); },
+  openPartPicker() { U.pickFor = 'item'; U.picker = true; render(); },
   itemQty(d) { U.editItem.qty = Math.max(0.5, +(U.editItem.qty + Number(d.d)).toFixed(1)); render(); },
   itemSlot(d) { U.editItem.to = d.slot; render(); },
   itemSave() {
     const ed = U.editItem;
     const day = dayMeals(U.date);
     const it = day[ed.slot][ed.i];
+    if (ed.parts) {
+      // 中身を直した場合：この日の記録だけ中身と数値を入れ替える
+      it.parts = ed.parts.map((x) => ({ ...x }));
+      const t = partsTotals(it.parts);
+      it.base = t;
+      it.detail = partsDetail(it.parts);
+    }
     if (!it.base) { const q = it.qty || 1; it.base = { kcal: it.kcal / q, p: it.p / q, f: it.f / q, c: it.c / q }; }
     it.qty = ed.qty;
     ['kcal', 'p', 'f', 'c'].forEach((k) => { it[k] = +(it.base[k] * ed.qty).toFixed(1); });
@@ -1871,12 +1911,13 @@ const A = {
   },
   qtyItem(d) { const it = U.editSet.items[Number(d.i)]; it.qty = Math.max(0.5, +(it.qty + Number(d.d)).toFixed(1)); render(); },
   removeSetItem(d) { U.editSet.items.splice(Number(d.i), 1); render(); },
-  openPicker() { U.picker = true; render(); },
-  closePicker() { U.picker = false; render(); },
+  openPicker() { U.pickFor = 'set'; U.picker = true; render(); },
+  closePicker() { U.picker = false; U.pickFor = null; render(); },
   pickFood(d) {
-    const ex = U.editSet.items.find((i) => i.foodId === d.id);
-    if (ex) ex.qty += 1; else U.editSet.items.push({ foodId: d.id, qty: 1 });
-    U.picker = false; render();
+    const list = U.pickFor === 'item' ? U.editItem.parts : U.editSet.items;
+    const ex = list.find((i) => i.foodId === d.id);
+    if (ex) ex.qty += 1; else list.push({ foodId: d.id, qty: 1 });
+    U.picker = false; U.pickFor = null; render();
   },
   newFoodForSet() { U.picker = false; U.editFood = { id: '', name: '', kcal: '', p: '', f: '', c: '' }; U.foodBack = 'editSet'; U.page = 'editFood'; render(); },
   saveSetDef() {
@@ -1887,6 +1928,19 @@ const A = {
     const i = S.sets.findIndex((x) => x.id === rec.id);
     if (i >= 0) S.sets[i] = rec; else S.sets.push(rec);
     save(); U.page = 'myMeals'; toast('保存したよ');
+  },
+  dupSet() {
+    const s = U.editSet;
+    U.editSet = { id: '', name: `${String(s.name).trim()}（コピー）`, items: s.items.map((i) => ({ ...i })) };
+    U.picker = false; render();
+    document.querySelector('.page') && (document.querySelector('.page').scrollTop = 0);
+    toast(isRobot() ? '複製しました。名前と中身を直して保存してください' : '複製したよ。名前と中身を直して保存してね');
+  },
+  dupFood() {
+    const m = U.editFood;
+    U.editFood = { ...m, id: '', name: `${String(m.name).trim()}（コピー）` };
+    render();
+    toast(isRobot() ? '複製しました。名前と数値を直して保存してください' : '複製したよ。名前と数値を直して保存してね');
   },
   deleteSetDef() {
     if (!confirm('このセットを削除する？（記録済みの食事は消えません）')) return;
