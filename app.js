@@ -103,8 +103,15 @@ function renderInner() {
   root.innerHTML = h;
   const np = root.querySelector('.page');
   if (np && pageEl && np.dataset.p === pageEl.dataset.p) np.scrollTop = keep;
+  syncChrome();
+}
+// 画面上部（時計・電池の表示）の色を、いま見えている画面に合わせる
+const TITLE_TOP = '#FC6CBA'; // トップ画面の絵のいちばん上の色
+function syncChrome() {
+  const c = U.title ? TITLE_TOP : (getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#FFFFFF');
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#FFFFFF';
+  if (meta) meta.content = c;
+  document.documentElement.style.backgroundColor = U.title ? TITLE_TOP : '';
 }
 
 /* ---------- 記録したときの演出（連続日数ボーナス：1週間で7段階） ---------- */
@@ -1773,6 +1780,7 @@ const A = {
   closeTitle() {
     const el = document.querySelector('.title-screen');
     U.title = null;
+    syncChrome();
     if (el) { el.classList.add('out'); setTimeout(() => { el.remove(); }, 380); } else render();
   },
   closeFx() { clearTimeout(_fxTimer); U.fx = null; render(); },

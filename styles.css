@@ -407,7 +407,7 @@ button.cy:active { transform: scale(.97); }
 .topbtn { height: 30px; min-width: 44px; padding: 0 10px; margin-right: 8px; border-radius: 999px; flex-shrink: 0; background: var(--soft); color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: .06em; }
 .topbtn:active { transform: scale(.94); }
 .hl { display: flex; align-items: center; }
-.title-screen { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #F7A8C4; cursor: pointer; }
+.title-screen { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #FC6CBA; cursor: pointer; }
 .title-screen.out { animation: ttOut .38s ease-in forwards; }
 @keyframes ttOut { to { opacity: 0; transform: scale(1.06); } }
 .tt-backdrop { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .13) 0 26px, transparent 26px 56px), linear-gradient(165deg, #F77DB5, #FBB8B0 48%, #FDD9A8 62%, #F78FC0); }
