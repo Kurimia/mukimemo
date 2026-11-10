@@ -520,3 +520,10 @@ details.othersets[open] summary::after { content: '▴'; }
 .tr-row.new { background: var(--soft); border-radius: 12px; border-bottom: 0; margin: 4px 0; padding-left: 8px; }
 .tr-new { flex-shrink: 0; font-size: 10px; font-weight: 800; color: var(--onAccent); background: var(--accent); border-radius: 999px; padding: 2px 7px; }
 .tray-foot { display: flex; align-items: center; gap: 10px; padding-top: 10px; }
+
+/* トップ画面：中央だけの丸いフラッシュ（画面の端は光らない） */
+.tt-glow { position: absolute; left: 50%; top: 45%; width: 150vmin; height: 150vmin; margin: -75vmin 0 0 -75vmin; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 255, 255, .95) 0, rgba(255, 255, 255, .7) 18%, rgba(255, 255, 255, .25) 38%, rgba(255, 255, 255, 0) 60%);
+  opacity: 0; animation: ttGlow .9s ease-out .4s both; }
+@keyframes ttGlow { 0% { opacity: 0; transform: scale(.3); } 25% { opacity: 1; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .tt-glow { display: none; } }

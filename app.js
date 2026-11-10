@@ -254,7 +254,8 @@ function titleView() {
   const t = U.title;
   const fresh = !t.played;
   t.played = true;
-  const fx = fresh ? fxLayer({ burst: 60, ring: 2, flash: true, y: '45%', seed: 9 }) : '';
+  // 画面全体を光らせると上下の時計・ホームバーとの境目が目立つので、中央だけを丸く光らせる
+  const fx = fresh ? fxLayer({ burst: 60, ring: 2, flash: false, y: '45%', seed: 9 }) + '<i class="tt-glow" aria-hidden="true"></i>' : '';
   const chars = isRobot()
     ? `<div class="tt-robots">${robotSVG('trainer')}${robotSVG('meal')}</div>`
     : '<img class="tt-chars" src="assets/title/chars.webp" alt="むきメモ♡">';
