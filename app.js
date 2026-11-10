@@ -100,6 +100,10 @@ function reuseChars(old) {
     const src = img.getAttribute('src');
     const cls = img.className;
     img.replaceWith(o);
+    swapImg(o, src, cls);
+  });
+}
+function swapImg(o, src, cls) {
     if (o.getAttribute('src') === src) { if (o.className !== cls) o.className = cls; return; }
     // 新しい画像は、表示の準備（デコード）が終わってから差し替える。それまでは前の表情のまま
     const token = (o._swap = (o._swap || 0) + 1);
@@ -111,7 +115,6 @@ function reuseChars(old) {
     const pre = _imgCache[src] || (_imgCache[src] = Object.assign(new Image(), { src }));
     if (pre.complete && pre.naturalWidth) (pre.decode ? pre.decode().catch(() => {}) : Promise.resolve()).then(swap);
     else pre.addEventListener('load', () => (pre.decode ? pre.decode().catch(() => {}) : Promise.resolve()).then(swap), { once: true });
-  });
 }
 function renderInner() {
   const oldChars = snapChars();
@@ -2098,7 +2101,19 @@ const A = {
     else if (slot === 'clear') { if (U.clear) U.clear.line = next; }
     else if (slot === 'chal') { if (U.chal) U.chal.line = next; }
     else U.said[slot] = next;
-    render();
+    // 食事・トレーニング・記録の画面では、画面全体を描き直さず、セリフとキャラの画像だけを入れ替える
+    // （iPhoneのSafariは描き直すと画像やアイコンが一瞬消えてチカチカするため）
+    const sel = { meal: ['.char[data-who="meal"]:not(.duo)', 'stage-meal'], train: ['.char[data-who="trainer"]:not(.duo)', 'stage-trainer'], workout: ['.char[data-who="trainer"]:not(.duo)', 'stage-trainer'], record: ['.char.duo.l', 'duo-trainer'], recordMeal: ['.char.duo.r', 'duo-meal'] }[slot];
+    const img = sel && document.querySelector(sel[0] + ' img.cimg');
+    if (!sel || (!img && !isRobot())) { render(); return; }
+    _lastLine[slot] = next;
+    el.innerHTML = phrase(next);
+    el.setAttribute('aria-label', `セリフを切り替える：${next}`);
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+    if (img) {
+      const src = charSrc(who, next, null, slot === 'record' ? [1] : undefined);
+      swapImg(img, src, 'cimg' + motionCls(sel[1], src, next));
+    }
   },
   ask(d) { U.ask = buildAsk(d.who); render(); },
   closeAsk() { U.ask = null; render(); },
