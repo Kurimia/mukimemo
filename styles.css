@@ -415,24 +415,23 @@ button.cy:active { transform: scale(.97); }
 .tt-fx { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 .tt-fx .fx { position: absolute; }
 /* 1. 背景だけ → 2. 中央からキャラが飛び出す */
-.fresh .tt-bg { animation: ttBg .7s ease-out both; }
 @keyframes ttBg { 0% { opacity: 0; transform: scale(1.08); } 100% { opacity: 1; transform: none; } }
 .tt-chars { z-index: 2; }
-.fresh .tt-chars { animation: ttPop 1.05s cubic-bezier(.2, 1.5, .4, 1) .85s both; }
+.fresh .tt-chars { animation: ttPop 1.05s cubic-bezier(.2, 1.5, .4, 1) .35s both; }
 @keyframes ttPop {
   0% { clip-path: circle(0% at 50% 48%); transform: scale(.55); filter: brightness(1.6); }
   45% { clip-path: circle(60% at 50% 48%); transform: scale(1.06); filter: brightness(1.15); }
   70% { clip-path: circle(90% at 50% 48%); transform: scale(.98); }
   100% { clip-path: circle(100% at 50% 48%); transform: scale(1); filter: none; }
 }
-.fresh .tt-fx .fx { animation: ttFxDelay 0s .85s both; }
+.fresh .tt-fx .fx { animation: ttFxDelay 0s .35s both; }
 @keyframes ttFxDelay { from { visibility: hidden; } to { visibility: visible; } }
-.fresh .tt-fx .fx * { animation-delay: .95s !important; }
+.fresh .tt-fx .fx * { animation-delay: .45s !important; }
 .tt-robots { z-index: 2; display: flex; align-items: center; justify-content: center; gap: 4%; padding-bottom: 18%; box-sizing: border-box; }
 .tt-robots .robot { width: 36%; height: auto; }
-.fresh .tt-robots { animation: ttPop 1.05s cubic-bezier(.2, 1.5, .4, 1) .85s both; }
+.fresh .tt-robots { animation: ttPop 1.05s cubic-bezier(.2, 1.5, .4, 1) .35s both; }
 .tt-tap { position: absolute; left: 50%; bottom: calc(var(--sb) + 28px); z-index: 5; transform: translateX(-50%); padding: 10px 22px; border-radius: 999px; background: rgba(255, 255, 255, .85); color: #E2457D; font-size: 16px; font-weight: 800; letter-spacing: .08em; white-space: nowrap; box-shadow: 0 4px 14px rgba(226, 69, 125, .35); animation: ttBlink 1.6s ease-in-out infinite; }
-.fresh .tt-tap { animation: ttIn .5s 1.9s both, ttBlink 1.6s 2.4s ease-in-out infinite; }
+.fresh .tt-tap { animation: ttIn .5s 1.4s both, ttBlink 1.6s 1.9s ease-in-out infinite; }
 @keyframes ttIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translateX(-50%); } }
 @keyframes ttBlink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .title-screen *, .title-screen.out { animation: none !important; } }
