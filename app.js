@@ -502,9 +502,6 @@ function mealInputView() {
     return m ? Array(n).fill(m) : [];
   }));
   const selCount = Object.values(U.sel).reduce((a, b) => a + b, 0);
-  const recorded = items.length ? `<h2 class="sectitle">記録済み</h2><div class="list">${items.map((it, i) => `
-      <div style="padding-top:8px;padding-bottom:8px"><button data-act="editItem" data-i="${i}" aria-label="${esc(itemName(it))}を直す" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;text-align:left;color:var(--text)"><span style="flex:1;min-width:0"><span style="display:block;font-size:15px">${esc(itemName(it))}</span>${it.detail ? `<span class="sub" style="display:block;font-size:12px;margin-top:2px">${esc(it.detail)}</span>` : ''}</span><span class="kcal num"><b style="font-size:18px">${fmtNum(it.kcal)}</b><small> kcal</small></span><span class="sub" style="display:flex">${IC.pencil(16)}</span></button>
-      <button class="iconbtn" data-act="removeItem" data-i="${i}" aria-label="${esc(it.name)}を削除" style="margin-right:-10px">${IC.close(20)}</button></div>`).join('')}</div>` : '';
   const prevLabel = prev ? (prev.date === addDays(U.date, -1) ? '昨日と同じ' : `${mdLabel(prev.date).md}と同じ`) : '';
   const prevBtn = prev ? `<button data-act="copyPrev" style="display:flex;align-items:center;gap:14px;min-height:72px;padding:0 16px;border-radius:18px;background:var(--soft);text-align:left">
       <span style="width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--onAccent);display:flex;align-items:center;justify-content:center;flex-shrink:0">${IC.repeat()}</span>
@@ -536,7 +533,7 @@ function mealInputView() {
       <h1 style="font-size:20px">${s.label}</h1>
       <span class="num sub" style="margin-left:auto;font-size:14px">${d.md}</span>
     </div>
-    ${recorded}${prevBtn}
+    ${prevBtn}
     <div style="display:flex;align-items:center;justify-content:space-between"><h2 class="sectitle">セット</h2>
       <button data-act="openMyMeals" data-back="mealInput" class="acc" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;min-height:40px">${IC.pencil(16)}編集</button></div>
     <div class="mgroups" data-kind="set">${setGroups}</div>
@@ -545,10 +542,31 @@ function mealInputView() {
     <button data-act="openPage" data-page="quickAdd" style="display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px;border:1.5px dashed var(--dash);border-radius:16px;text-align:left">
       <span class="acc">${IC.chat(22)}</span><span style="flex:1;font-size:15px;font-weight:700">外食・その他</span><span class="sub" style="font-size:12px">Claudeに聞く</span><span class="sub">${IC.chevR()}</span></button>
   </div></div>
-  <div class="footer">
-    <div style="flex:1"><span class="sub" style="display:block;font-size:12px">${selCount ? `${selCount}品 選択中　<a href="#" data-act="clearSel" class="acc" style="font-weight:700">やり直す</a>` : '合計'}</span><span class="num" style="font-size:26px;font-weight:800">${fmtNum(selTot.kcal)}</span><span class="num sub" style="font-size:12px"> kcal</span></div>
-    <button class="btn" style="width:auto;padding:0 32px" data-act="saveSel" ${selCount ? '' : 'disabled'}>記録する</button>
-  </div>`;
+  ${mealTray(s, items)}`;
+}
+
+// 画面の下半分：記録済みの食事 ＋ いま選んでいる食事。品目とkcal、合計を表示
+function mealTray(s, items) {
+  const pend = Object.entries(U.sel).map(([key, n]) => ({ key, n, m: entryFor(key) })).filter((x) => x.m);
+  const pendTot = sumItems(pend.flatMap((x) => Array(x.n).fill(x.m)));
+  const recTot = sumItems(items);
+  const tot = { kcal: recTot.kcal + pendTot.kcal, p: recTot.p + pendTot.p, f: recTot.f + pendTot.f, c: recTot.c + pendTot.c };
+  const pendCount = pend.reduce((a, x) => a + x.n, 0);
+  const recRows = items.map((it, i) => `<div class="tr-row">
+      <button class="tr-main" data-act="editItem" data-i="${i}" aria-label="${esc(itemName(it))}を直す"><span class="tr-name">${esc(itemName(it))}${it.detail ? `<small>${esc(it.detail)}</small>` : ''}</span><span class="kcal num"><b>${fmtNum(it.kcal)}</b><small> kcal</small></span><span class="sub" style="display:flex">${IC.pencil(15)}</span></button>
+      <button class="iconbtn tr-x" data-act="removeItem" data-i="${i}" aria-label="${esc(it.name)}を削除">${IC.close(18)}</button></div>`).join('');
+  const newRows = pend.map((x) => `<div class="tr-row new">
+      <span class="tr-main"><span class="tr-new">追加</span><span class="tr-name">${esc(x.m.name)}${x.n > 1 ? ` <b class="num">×${x.n}</b>` : ''}</span><span class="kcal num"><b>${fmtNum(x.m.kcal * x.n)}</b><small> kcal</small></span></span>
+      <button class="iconbtn tr-x" data-act="unsel" data-id="${x.key}" aria-label="${esc(x.m.name)}を取り消す">${IC.minus(18)}</button></div>`).join('');
+  return `<section class="tray" aria-label="${s.label}の食事">
+    <div class="tray-head"><b>${s.label}の食事</b><span class="sub" style="font-size:12px">${items.length + pendCount}品</span>
+      <span class="tray-tot">合計 <b class="num">${fmtNum(tot.kcal)}</b><small> kcal</small></span></div>
+    <div class="tray-list">${recRows}${newRows}${items.length || pend.length ? '' : '<p class="sub" style="font-size:13px;text-align:center;padding:18px 0">上のセットや単品を選ぶと、ここに追加されます</p>'}</div>
+    <div class="tray-foot">
+      <span class="sub num" style="font-size:12px;flex:1">P${fmt1(tot.p)}　F${fmt1(tot.f)}　C${fmt1(tot.c)}${pendCount ? `　<a href="#" data-act="clearSel" class="acc" style="font-weight:700">やり直す</a>` : ''}</span>
+      <button class="btn" style="width:auto;padding:0 26px;height:50px" data-act="saveSel" ${pendCount ? '' : 'disabled'}>${pendCount ? `${pendCount}品を保存` : '保存'}</button>
+    </div>
+  </section>`;
 }
 
 function quickAddView() {
@@ -1660,6 +1678,7 @@ const A = {
   },
   openSlot(d) { U.slot = d.slot; U.sel = {}; U.page = 'mealInput'; render(); },
   toggleMeal(d) { U.sel[d.id] = ((U.sel[d.id] || 0) + 1); if (U.sel[d.id] > 3) delete U.sel[d.id]; render(); },
+  unsel(d) { const n = (U.sel[d.id] || 0) - 1; if (n > 0) U.sel[d.id] = n; else delete U.sel[d.id]; render(); },
   clearSel() { U.sel = {}; render(); },
   saveSel() {
     const first = U.date === today() && !hasMeal(today());

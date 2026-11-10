@@ -502,3 +502,21 @@ details.othersets[open] summary::after { content: '▴'; }
 .mgroups.dragging .mgrp.empty .mgrid { min-height: 56px; border: 1.5px dashed var(--line); border-radius: 12px; }
 .mcard { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 .mcard.sph { opacity: .3; }
+
+/* ---------- 食事を記録する画面：下半分の「この枠の食事」 ---------- */
+.page[data-p="mealInput"] .inner { padding-bottom: calc(44dvh + 24px); }
+.tray { position: fixed; left: 0; right: 0; bottom: 0; z-index: 31; max-height: 44dvh; display: flex; flex-direction: column; background: var(--card); border-radius: 22px 22px 0 0; box-shadow: 0 -8px 30px rgba(0, 0, 0, .14); padding: 12px 16px calc(var(--sb) + 10px); }
+.tray-head { display: flex; align-items: baseline; gap: 8px; padding: 0 2px 8px; border-bottom: 1px solid var(--line); }
+.tray-head > b { font-size: 15px; }
+.tray-tot { margin-left: auto; font-size: 13px; font-weight: 700; }
+.tray-tot b { font-size: 24px; }
+.tray-list { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.tr-row { display: flex; align-items: center; border-bottom: 1px solid var(--line); }
+.tr-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 50px; padding: 6px 2px; text-align: left; color: var(--text); }
+.tr-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 700; }
+.tr-name small { display: block; font-size: 11px; font-weight: 500; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.tr-main .kcal b { font-size: 16px; }
+.tr-x { width: 40px; height: 40px; margin-right: -8px; }
+.tr-row.new { background: var(--soft); border-radius: 12px; border-bottom: 0; margin: 4px 0; padding-left: 8px; }
+.tr-new { flex-shrink: 0; font-size: 10px; font-weight: 800; color: var(--onAccent); background: var(--accent); border-radius: 999px; padding: 2px 7px; }
+.tray-foot { display: flex; align-items: center; gap: 10px; padding-top: 10px; }
