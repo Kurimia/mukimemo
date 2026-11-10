@@ -86,6 +86,7 @@ function charKey(img) {
   const c = img.closest('.char');
   return c ? (c.dataset.who || '') + (c.classList.contains('duo') ? '-duo' : '') : null;
 }
+const _imgCache = {};
 function snapChars() {
   const m = {};
   document.querySelectorAll('.char img.cimg').forEach((img) => { const k = charKey(img); if (k) m[k] = img; });
@@ -98,9 +99,18 @@ function reuseChars(old) {
     if (!o || o === img) return;
     const src = img.getAttribute('src');
     const cls = img.className;
-    if (o.className !== cls) { o.className = 'cimg'; void o.offsetWidth; o.className = cls; } // 動きのアニメーションをやり直す
-    if (o.getAttribute('src') !== src) o.setAttribute('src', src);
     img.replaceWith(o);
+    if (o.getAttribute('src') === src) { if (o.className !== cls) o.className = cls; return; }
+    // 新しい画像は、表示の準備（デコード）が終わってから差し替える。それまでは前の表情のまま
+    const token = (o._swap = (o._swap || 0) + 1);
+    const swap = () => {
+      if (o._swap !== token) return; // もっと新しい切り替えが来ていたら何もしない
+      o.setAttribute('src', src);
+      o.className = 'cimg'; void o.offsetWidth; o.className = cls; // 動きのアニメーションをやり直す
+    };
+    const pre = _imgCache[src] || (_imgCache[src] = Object.assign(new Image(), { src }));
+    if (pre.complete && pre.naturalWidth) (pre.decode ? pre.decode().catch(() => {}) : Promise.resolve()).then(swap);
+    else pre.addEventListener('load', () => (pre.decode ? pre.decode().catch(() => {}) : Promise.resolve()).then(swap), { once: true });
   });
 }
 function renderInner() {
@@ -274,6 +284,7 @@ function preloadChars() {
     const im = new Image();
     im.decoding = 'async';
     im.src = `assets/char/v2/${who}${pose}-${e}.webp`;
+    _imgCache[`assets/char/v2/${who}${pose}-${e}.webp`] = im;
     if (im.decode) im.decode().catch(() => {});
     _imgKeep.push(im);
   })));
