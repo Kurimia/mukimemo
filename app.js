@@ -79,32 +79,34 @@ function render() {
     }
   }
 }
-// キャラの画像が変わるとき、前の画像を少しだけ残してフェードで消す（パッと消えてチカチカしないように）
+// キャラの画像は、描き直しても同じ img 要素を使い回す。
+// 新しい img に差し替えると、iPhoneでは読み込みの一瞬だけ何も表示されず、後ろが透けて見えるため。
+// 使い回した img は src を変えるだけなので、新しい画像の準備ができるまで前の画像が表示されたままになる
 function charKey(img) {
   const c = img.closest('.char');
   return c ? (c.dataset.who || '') + (c.classList.contains('duo') ? '-duo' : '') : null;
 }
 function snapChars() {
   const m = {};
-  document.querySelectorAll('.char img.cimg').forEach((img) => { const k = charKey(img); if (k) m[k] = img.getAttribute('src'); });
+  document.querySelectorAll('.char img.cimg').forEach((img) => { const k = charKey(img); if (k) m[k] = img; });
   return m;
 }
-function crossfadeChars(old) {
+function reuseChars(old) {
   document.querySelectorAll('.char img.cimg').forEach((img) => {
     const k = charKey(img);
-    const prev = k && old[k];
-    if (!prev || prev === img.getAttribute('src')) return;
-    const g = document.createElement('img');
-    g.src = prev; g.alt = ''; g.className = 'cimg-old';
-    Object.assign(g.style, { left: img.offsetLeft + 'px', top: img.offsetTop + 'px', width: img.offsetWidth + 'px', height: img.offsetHeight + 'px', objectFit: getComputedStyle(img).objectFit, objectPosition: getComputedStyle(img).objectPosition });
-    img.parentNode.insertBefore(g, img.nextSibling);
-    setTimeout(() => g.remove(), 320);
+    const o = k && old[k];
+    if (!o || o === img) return;
+    const src = img.getAttribute('src');
+    const cls = img.className;
+    if (o.className !== cls) { o.className = 'cimg'; void o.offsetWidth; o.className = cls; } // 動きのアニメーションをやり直す
+    if (o.getAttribute('src') !== src) o.setAttribute('src', src);
+    img.replaceWith(o);
   });
 }
 function renderInner() {
   const oldChars = snapChars();
   renderBody();
-  crossfadeChars(oldChars);
+  reuseChars(oldChars);
 }
 function renderBody() {
   applyCharMode();
