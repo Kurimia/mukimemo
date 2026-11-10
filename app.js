@@ -1369,6 +1369,12 @@ function settingsView() {
       <button class="round" style="width:40px;height:40px;background:var(--mute)" data-act="restSet" data-d="15" aria-label="15秒長く">${IC.plus(18)}</button></div></div>
     <h2 class="sectitle">キャラクター</h2>
     <div class="seg" role="group" aria-label="キャラクター">${[['girl', 'ふたり'], ['robot', 'ロボット']].map(([v, l]) => `<button data-act="charMode" data-v="${v}" aria-pressed="${(st.charMode || 'girl') === v}">${l}</button>`).join('')}</div>
+    <h2 class="sectitle">いつも同じチャットで相談する</h2>
+    <div class="list">
+      ${['trainer', 'meal'].map((w) => `<label style="flex-direction:column;align-items:stretch;gap:4px;padding-top:10px;padding-bottom:10px"><span style="font-size:14px;font-weight:700">${CHARACTERS[w].name}のチャットのURL</span>
+        <input type="url" inputmode="url" data-chat="${w}" value="${esc((st.chatUrl || {})[w] || '')}" placeholder="https://claude.ai/chat/…" style="height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font-size:14px;background:var(--card);color:var(--text)"></label>`).join('')}
+    </div>
+    <p class="sub" style="font-size:12px;line-height:1.6;margin-top:-4px">Safariで claude.ai を開き、相談に使っているチャットのURLをコピーして貼り付けてください。空欄のときは、相談のたびに新しいチャットになります。</p>
     <h2 class="sectitle">画面の色</h2>
     <div class="seg" role="group" aria-label="画面の色">${[['auto', '自動'], ['light', 'ライト'], ['dark', 'ダーク']].map(([v, l]) => `<button data-act="theme" data-v="${v}" aria-pressed="${st.theme === v}">${l}</button>`).join('')}</div>
     <h2 class="sectitle">データ</h2>
@@ -1537,6 +1543,7 @@ function buildAsk(who) {
     ],
   };
 }
+const chatUrl = (who) => (S.settings.chatUrl || {})[who] || '';
 const askText = (a) => (a.topics ? `${a.base}\n\n${a.topics[a.sel].q}` : a.text);
 
 function askView() {
@@ -1554,7 +1561,11 @@ function askView() {
     </div>` : ''}
     <p class="sub" style="font-size:12px;line-height:1.6">${esc(a.desc)}</p>
     <div class="pre">${esc(askText(a))}</div>
-    <div class="g2"><button class="btn ghost" data-act="closeAsk">やめる</button><button class="btn" data-act="goClaude">聞く</button></div>
+    ${chatUrl(a.who) && a.topics
+      ? `<button class="btn" data-act="goClaude" data-same="1">いつものチャットで聞く</button>
+         <p class="sub" style="font-size:12px;text-align:center;margin-top:-6px">相談文をコピーしてチャットを開きます。入力欄に貼り付けて送ってね</p>
+         <div class="g2"><button class="btn ghost" data-act="closeAsk">やめる</button><button class="btn ghost" data-act="goClaude">新しいチャットで</button></div>`
+      : '<div class="g2"><button class="btn ghost" data-act="closeAsk">やめる</button><button class="btn" data-act="goClaude">聞く</button></div>'}
   </section>`;
 }
 
@@ -1939,7 +1950,21 @@ const A = {
   ask(d) { U.ask = buildAsk(d.who); render(); },
   closeAsk() { U.ask = null; render(); },
   askTopic(d) { U.ask.sel = Number(d.i); render(); },
-  goClaude() { const t = askText(U.ask); U.ask = null; render(); openClaude(t); },
+  goClaude(d) {
+    const a = U.ask;
+    U.ask = null;
+    if (d.same && chatUrl(a.who)) {
+      // いつものチャット：キャラ設定はもう伝わっているので、記録と質問だけを送る
+      const t = askText(a).replace(persona(a.who) + '\n\n', '');
+      copyText(t);
+      render();
+      toast(isRobot() ? '相談文をコピーしました。チャットに貼り付けて送ってください' : '相談文をコピーしたよ。チャットに貼り付けて送ってね');
+      const w = window.open(chatUrl(a.who), '_blank');
+      if (!w) location.href = chatUrl(a.who);
+      return;
+    }
+    render(); openClaude(askText(a));
+  },
 };
 
 // 単品を保存。link=false のときは、セットに入っている元の数値を「セット専用」として残す
@@ -2130,6 +2155,13 @@ function bindEvents() {
   root.addEventListener('change', (ev) => {
     const el = ev.target;
     if (el.dataset.q && el.type === 'checkbox') U.quick.save = el.checked;
+    if (el.dataset.chat) {
+      if (!S.settings.chatUrl) S.settings.chatUrl = {};
+      const v = el.value.trim();
+      S.settings.chatUrl[el.dataset.chat] = /^https:\/\/claude\.ai\//.test(v) ? v : '';
+      if (v && !S.settings.chatUrl[el.dataset.chat]) toast(isRobot() ? 'claude.ai のURLを入力してください' : 'claude.ai のURLを入れてね');
+      save();
+    }
     if (el.dataset.goal) {
       const k = el.dataset.goal;
       if (k === 'goalWeight') { const v = Number(el.value); S.settings.goalWeight = v > 0 ? v : null; }
