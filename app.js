@@ -98,6 +98,7 @@ function renderInner() {
   if (U.ask) h += askView();
   if (U.linkAsk) h += linkAskView();
   if (U.fx) h += fxPopView();
+  if (U.title) h += titleView();
   if (U.toast) h += `<div class="toast" role="status">${phrase(U.toast)}</div>`;
   root.innerHTML = h;
   const np = root.querySelector('.page');
@@ -241,6 +242,25 @@ function preloadChars() {
     _imgKeep.push(im);
   })));
 }
+/* ---------- トップ画面（その日はじめて開いたとき・左上のアイコン） ---------- */
+function titleView() {
+  const t = U.title;
+  const fresh = !t.played;
+  t.played = true;
+  const fx = fresh ? fxLayer({ burst: 60, ring: 2, flash: true, y: '45%', seed: 9 }) : '';
+  const chars = isRobot()
+    ? `<div class="tt-robots">${robotSVG('trainer')}${robotSVG('meal')}</div>`
+    : '<img class="tt-chars" src="assets/title/chars.webp" alt="むきメモ♡">';
+  return `<div class="title-screen${fresh ? ' fresh' : ''}" data-act="closeTitle" role="dialog" aria-label="むきメモ♡ トップ画面。タップしてはじめる">
+    <div class="tt-backdrop"></div>
+    <div class="tt-stage">
+      <img class="tt-bg" src="assets/title/bg.webp" alt="">
+      ${chars}
+      <div class="tt-fx">${fx}</div>
+    </div>
+    <p class="tt-tap">タップしてはじめる</p>
+  </div>`;
+}
 function charImg(who, line, expr) {
   return isRobot() ? robotSVG(who) : `<img src="${charSrc(who, line, expr)}" alt="" decoding="sync">`;
 }
@@ -329,6 +349,7 @@ function mealView() {
   return `<main class="screen">
     <div class="head">
       <div style="display:flex;align-items:center">
+        <button class="topbtn" data-act="openTitle" aria-label="トップ画面"><img src="assets/icons/icon-180.png" alt=""></button>
         <button class="iconbtn" data-act="day" data-d="-1" aria-label="前の日">${IC.chevL()}</button>
         <h1 class="num" style="font-size:20px;font-weight:800">${d.md}<span style="font-size:14px;font-weight:500;color:var(--sub)"> ${d.wd}${isToday ? '・今日' : ''}</span></h1>
         <button class="iconbtn" data-act="day" data-d="1" aria-label="次の日" ${isToday ? 'disabled' : ''}>${IC.chevR(22)}</button>
@@ -555,7 +576,7 @@ function doneTodayView(last) {
       ${pb ? '<span class="badge">自己ベスト</span>' : ''}</div>`;
   }).join('');
   return `<main class="screen">
-    <div class="head"><h1>トレーニング</h1></div>
+    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面"><img src="assets/icons/icon-180.png" alt=""></button><h1>トレーニング</h1></span></div>
     ${cycleBar(false)}
     <section class="donetoday" aria-label="今日のトレーニング完了">
       <span class="tro">${IC.trophy(34)}</span>
@@ -592,7 +613,7 @@ function trainView() {
     </div>${chal && chal.exId === p.exId ? `<div class="chal-note">${IC.flame(16)}<b>チャレンジ</b><span>${chalText(p.exId, chal.w, chal.reps)}で自己ベスト更新</span></div>` : ''}`;
   }).join('');
   return `<main class="screen">
-    <div class="head"><h1>トレーニング</h1>${last ? `<span class="sub" style="font-size:13px">前回 <b class="num" style="font-size:15px;color:var(--text)">${mdLabel(last.date).md}</b></span>` : ''}</div>
+    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面"><img src="assets/icons/icon-180.png" alt=""></button><h1>トレーニング</h1></span>${last ? `<span class="sub" style="font-size:13px">前回 <b class="num" style="font-size:15px;color:var(--text)">${mdLabel(last.date).md}</b></span>` : ''}</div>
     ${cycleBar(true)}
     <section class="soft" aria-label="今日のメニュー" style="padding:18px;display:flex;flex-direction:column;gap:14px">
       <div style="display:flex;align-items:center;gap:14px">
@@ -1025,7 +1046,7 @@ function recordView() {
   const bests = Object.entries(S.exState).filter(([, v]) => v.best != null).sort((a, b) => (b[1].bestDate || '').localeCompare(a[1].bestDate || '')).slice(0, 3);
   const lastPhoto = PHOTOS.length ? PHOTOS[PHOTOS.length - 1] : null;
   return `<main class="screen">
-    <div class="head"><h1>記録</h1><button class="iconbtn" data-act="openPage" data-page="settings" aria-label="設定" style="margin-right:-10px"><span class="part" style="width:24px;height:24px;--m:url(assets/icons/gear.png)" aria-hidden="true"></span></button></div>
+    <div class="head"><span class="hl"><button class="topbtn" data-act="openTitle" aria-label="トップ画面"><img src="assets/icons/icon-180.png" alt=""></button><h1>記録</h1></span><button class="iconbtn" data-act="openPage" data-page="settings" aria-label="設定" style="margin-right:-10px"><span class="part" style="width:24px;height:24px;--m:url(assets/icons/gear.png)" aria-hidden="true"></span></button></div>
     ${backupDue() ? `<button class="backup-note" data-act="exportData">${IC.download(20)}<span><b>バックアップしておきましょう</b><small>${S.lastBackup ? `最後のバックアップから${backupDays()}日` : 'まだ一度もバックアップしていません'}</small></span>${IC.chevR()}</button>` : ''}
     <section class="soft" aria-label="今朝の体重" style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px">
       <div style="display:flex;align-items:center;justify-content:space-between"><span class="acc" style="font-size:13px;font-weight:700">今朝の体重${todayKg != null ? '（記録済み）' : ''}</span>${prevKg != null ? `<span class="sub" style="font-size:12px">前回 <b class="num">${fmt1(prevKg)}</b>kg</span>` : ''}</div>
@@ -1696,6 +1717,12 @@ const A = {
     save(); render();
   },
   clearClose() { U.clear = null; render(); },
+  openTitle() { U.title = { played: false }; render(); },
+  closeTitle() {
+    const el = document.querySelector('.title-screen');
+    U.title = null;
+    if (el) { el.classList.add('out'); setTimeout(() => { el.remove(); }, 380); } else render();
+  },
   closeFx() { clearTimeout(_fxTimer); U.fx = null; render(); },
   chalClose() { U.chal = null; render(); },
   showNext() { U.showNext = true; U.said.train = null; _msgCache = {}; render(); },
@@ -2107,6 +2134,7 @@ function bindEvents() {
   try {
     await loadState();
     preloadChars();
+    if (S.lastTitle !== today()) { U.title = { played: false }; S.lastTitle = today(); save(); }
     // データを消されにくくする（iPhoneの容量が少なくなったときなど）
     try { if (navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch (e) { /* 対応していなくてもOK */ }
     const ps = await photoAll();
